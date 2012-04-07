@@ -4,7 +4,7 @@ First clone this git repository by typing in your working directory:
 
     git clone git://github.com/pyongjoo/enron.git
 
-It will create a directory *enron*. Otherwise, if you want to clone the dataset inyour current working directory, type:
+It will create a directory *enron*. Otherwise, if you want to clone the dataset in your current working directory, type:
 
     git clone git://github.com/pyongjoo/enron.git .
 
