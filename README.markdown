@@ -11,6 +11,10 @@ It will create a directory *enron*. Otherwise, if you want to clone the dataset 
 After download has finished, run the following code:
 
     ./dumpFileIntoDir.py [output directory]
+    
+or
+    
+    python dumpFileIntoDir.py [output directory]
 
 It takes several minutes to finish. The code generates following directory structure:
 
