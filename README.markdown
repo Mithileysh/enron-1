@@ -1,4 +1,4 @@
-## Quick Tutorial
+## Quick Start
 
 First clone this git repository by typing in your working directory:
 
@@ -14,13 +14,17 @@ After download has finished, run the following code:
 
 It takes several minutes to finish. The code generates following directory structure:
 
-+ [output directory]
+- [output directory]
     - sender 1
-        * receiver 1
-        * receiver 2
+        - receiver 1
+            + file 1
+            + file 2
+            + ...
+        - receiver 2
     - sender 2
     - ...
 
+Fow now, the code does not generate training set and test set separately according to the written date. It should be done in the near future.
 
 
 ## The list of top users and Date
