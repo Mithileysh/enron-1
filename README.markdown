@@ -16,7 +16,7 @@ or
     
     python dumpFileIntoDir.py [output directory]
 
-It takes several minutes to finish. The code generates following directory structure:
+It takes several minutes to finish (less than a minute in desktop). The code generates following directory structure:
 
 - [output directory]
     - sender 1
