@@ -154,7 +154,8 @@ Retrieve emails sent from a specific user to users to whom the user sent emails 
                 (select * from topSenders) and
             r.rtype = 'TO'
             GROUP by mid) as T
-        WHERE T.count = 1) and
+        WHERE T.count = 1
+    ) and
     r.rvalue in (
         select recipient from (
             select m.mid as mid, m.sender as sender, r.rvalue as recipient,
