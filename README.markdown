@@ -14,7 +14,7 @@ in your current working directory, type:
 
 After download has finished, type the following to dump mysql data into a json file:
 
-    ./dumpIntoFile.py > top5people-sentbox.json
+    ./dumpIntoFile.py | python -mjson.tool > top5people-sentbox.json
     
 After that, we can dump again the file contents into labeled directory by entering:
 
