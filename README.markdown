@@ -48,7 +48,7 @@ according to the written date. It should be done in the near future.
 
 ### Running Naive Bayes classifier using Mallet library
 
-Import the created dataset into a mallet format (only for Naive Bayes):
+*importdir.sh* - Import the created dataset into a mallet format (only for Naive Bayes):
 
     #!/bin/bash
     MalletHome=/home/yongjoo/workspace/mallet-2.0.7
@@ -60,7 +60,7 @@ Import the created dataset into a mallet format (only for Naive Bayes):
     $CMD
 
 
-Make a bash script with following contents, and run it:
+*runMallet.sh* - Run Naive Bayes trainer with 10-fold cross validation:
 
     #!/bin/bash
     MalletHome=/home/yongjoo/workspace/mallet-2.0.7
@@ -68,6 +68,35 @@ Make a bash script with following contents, and run it:
     CMD="$MalletHome/bin/mallet train-classifier \
     --input $InputFile \
     --cross-validation 10"
+    $CMD
+
+
+### Running LDA for feature space reduction
+
+*importdirTopicModel.sh* - Import the created dataset into a mallet format (only for Topic modelling):
+
+    #!/bin/bash
+    MalletHome=/home/yongjoo/workspace/mallet-2.0.7
+    InputDir=exclusiveDataset/jeff.dasovich/*
+    OutputFile=topic-input.mallet
+    CMD="$MalletHome/bin/mallet import-dir \
+      --input $InputDir \
+      --output $OutputFile \
+      --keep-sequence \
+      --remove-stopwords"
+    #echo $CMD
+    $CMD
+
+*runTopicMallet.sh* - Run Topic Modeling Mallet library and save topics for each doc into a file:
+
+    #!/bin/bash
+    MalletHome=/home/yongjoo/workspace/mallet-2.0.7
+    InputFile=topic-input.mallet
+    OutputFile=doc-topics.txt
+    CMD="$MalletHome/bin/mallet train-topics \
+      --input $InputFile \
+      --num-topics 100 \
+      --output-doc-topics $OutputFile"
     $CMD
 
 
@@ -90,7 +119,7 @@ Make a bash script with following contents, and run it:
     5 rows in set (0.60 sec)
 
 
-## Queries to Analyze Data
+## Queries used to Extract Data
 
 Number of emails sent from a specific person:
 
