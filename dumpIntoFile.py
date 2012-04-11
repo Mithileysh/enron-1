@@ -5,65 +5,80 @@ import MySQLdb as mdb
 import sys, json
 
 def dumpIntoDir():
-  # All the retrieved data are stored in this hash table structure
-  # { 'sender 1': [mail 1, mail 2, ...]
-  #   'sender 2': ...
-  #   ...
-  # }
-  #
-  # And the mail object is as follows:
-  # mail =
-  # { 'mid': ..
-  #   'recipient': ..
-  #   'rtype': ..
-  #   'date': ..
-  #   'subject': ..
-  #   'body': ..
-  # }
-  doc = {}
+    # All the retrieved data are stored in this hash table structure
+    # { 'sender 1': [mail 1, mail 2, ...]
+    #   'sender 2': ...
+    #   ...
+    # }
+    #
+    # And the mail object is as follows:
+    # mail =
+    # { 'mid': ..
+    #   'recipient': ..
+    #   'rtype': ..
+    #   'date': ..
+    #   'subject': ..
+    #   'body': ..
+    # }
+    doc = {}
 
 
-  con = mdb.connect('localhost', 'root', 'Fgla4Zp0', 'enron')
+    con = mdb.connect('localhost', 'root', 'Fgla4Zp0', 'enron')
 
-  with con:
+    with con:
 
-    cur = con.cursor(mdb.cursors.DictCursor)
-    slist = ['jeff.dasovich@enron.com', 'kay.mann@enron.com', 'sara.shackleton@enron.com',
-        'tana.jones@enron.com', 'vince.kaminski@enron.com']
+        cur = con.cursor(mdb.cursors.DictCursor)
+        slist = ['jeff.dasovich@enron.com',
+            'kay.mann@enron.com',
+            'sara.shackleton@enron.com',
+            'tana.jones@enron.com',
+            'vince.kaminski@enron.com']
 
-    for sender in slist:
-      query = """
-      select m.mid as mid, m.sender as sender, m.date as date,
-      m.subject as subject, m.body as body, r.rtype as type,
-      r.rvalue as receiver
-      from message m
-      inner join recipientinfo r
-      on m.mid = r.mid
-      where m.sender = '%s'
-      order by m.date asc""" % sender
+        for sender in slist:
+            query = """
+            SELECT m.mid as mid, m.sender as sender, m.date as date,
+            m.subject as subject, m.body as body, r.rtype as type,
+            r.rvalue as recipient
+            FROM message m
+            inner join recipientinfo r
+            on m.mid = r.mid
+            WHERE m.sender = '%s' and
+            r.rvalue in (
+                select recipient from (
+                    select m.mid as mid, m.sender as sender, r.rvalue as recipient,
+                    count(*) as sentcount
+                    from message m
+                    inner join recipientinfo r
+                    on m.mid = r.mid
+                    where m.sender = '%s' and
+                    r.rtype = 'TO'
+                    group by r.rvalue
+                    order by sentcount asc) as T
+                where T.sentcount > 10
+            )""" % (sender, sender)
 
-      cur.execute(query)
+            cur.execute(query)
 
-      while True:
-        row = cur.fetchone()
-        if not row:
-          break
+            while True:
+                row = cur.fetchone()
+                if not row:
+                    break
 
-        # construct a mail object
-        mail = {'mid': row['mid'],
-            'recipient': row['receiver'],
-            'rtype': row['type'],
-            'date': unicode(row['date'].replace(microsecond=0)),
-            'subject': row['subject'],
-            'body': row['body']}
+                # construct a mail object
+                mail = {'mid': row['mid'],
+                        'recipient': row['recipient'],
+                        'rtype': row['type'],
+                        'date': unicode(row['date'].replace(microsecond=0)),
+                        'subject': row['subject'],
+                        'body': row['body']}
 
-        if not sender in doc:
-          doc[sender] = []
+                if not sender in doc:
+                    doc[sender] = []
 
-        doc[sender].append(mail)
+                doc[sender].append(mail)
 
-  return doc
+    return doc
 
 
 if __name__ == "__main__":
-  print json.dumps(dumpIntoDir())
+    print json.dumps(dumpIntoDir())
