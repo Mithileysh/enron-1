@@ -119,7 +119,7 @@ according to the written date. It should be done in the near future.
     5 rows in set (0.60 sec)
 
 
-## Queries to Analyze Data
+## Queries used to Extract Data
 
 Number of emails sent from a specific person:
 
