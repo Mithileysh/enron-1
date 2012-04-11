@@ -3,7 +3,7 @@ rel="stylesheet"></link>
 
 ## Quick Start
 
-### Downloaing from Git repository
+### Downloaing scripts from this Git repository
 
 First clone this git repository by typing in your working directory:
 
@@ -44,6 +44,31 @@ It takes several minutes to finish (less than a minute in desktop). The code gen
 
 Fow now, the code does not generate training set and test set separately
 according to the written date. It should be done in the near future.
+
+
+### Running Naive Bayes classifier using Mallet library
+
+Import the created dataset into a mallet format (only for Naive Bayes):
+
+    #!/bin/bash
+    MalletHome=/home/yongjoo/workspace/mallet-2.0.7
+    InputDir=exclusiveDataset/jeff.dasovich/*
+    OutputFile=exclusiveEnron.mallet
+    CMD="$MalletHome/bin/mallet import-dir \
+    --input $InputDir \
+    --output $OutputFile"
+    $CMD
+
+
+Make a bash script with following contents, and run it:
+
+    #!/bin/bash
+    MalletHome=/home/yongjoo/workspace/mallet-2.0.7
+    InputFile=exclusiveEnron.mallet
+    CMD="$MalletHome/bin/mallet train-classifier \
+    --input $InputFile \
+    --cross-validation 10"
+    $CMD
 
 
 
