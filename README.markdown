@@ -117,3 +117,55 @@ Retrieve emails sent from a specific user to users to whom the user sent emails 
             order by sentcount asc) as T
         where T.sentcount > 10
     )
+
+
+Filter emails with only one recipient:
+
+    select mid
+    from (
+        SELECT m.mid as mid, r.rvalue as recipient, count(*) as count
+        FROM message m
+        inner join recipientinfo r
+        on m.mid = r.mid
+        where m.sender in
+            (select * from topSenders) and
+        r.rtype = 'TO'
+        GROUP by mid) as T;
+    WHERE T.count = 1;
+
+
+Retrieve emails sent from a specific user to users to whom the user sent emails more than 10 times, and with only one recipient:
+
+    SELECT m.mid as mid, m.sender as sender, m.date as date,
+    m.subject as subject, m.body as body, r.rtype as type,
+    r.rvalue as recipient
+    FROM message m
+    inner join recipientinfo r
+    on m.mid = r.mid
+    WHERE m.sender = 'jeff.dasovich@enron.com' and
+    m.mid in (
+        select mid
+        from (
+            SELECT m.mid as mid, r.rvalue as recipient, count(*) as count
+            FROM message m
+            inner join recipientinfo r
+            on m.mid = r.mid
+            where m.sender in
+                (select * from topSenders) and
+            r.rtype = 'TO'
+            GROUP by mid) as T
+        WHERE T.count = 1) and
+    r.rvalue in (
+        select recipient from (
+            select m.mid as mid, m.sender as sender, r.rvalue as recipient,
+            count(*) as sentcount
+            from message m
+            inner join recipientinfo r
+            on m.mid = r.mid
+            where m.sender = 'jeff.dasovich@enron.com' and
+            r.rtype = 'TO'
+            group by r.rvalue
+            order by sentcount asc) as S
+        where S.sentcount > 10
+    )
+
