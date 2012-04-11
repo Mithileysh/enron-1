@@ -20,8 +20,12 @@ or
 
     python dumpFileIntoDir.py [output directory]
 
+<<<<<<< HEAD
 It takes several minutes to finish. The code generates following directory
 structure:
+=======
+It takes several minutes to finish (less than a minute in desktop). The code generates following directory structure:
+>>>>>>> origin/master
 
 - [output directory]
     - sender 1

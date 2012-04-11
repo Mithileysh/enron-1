@@ -46,6 +46,7 @@ os.mkdir(root)
 for sender, messages in doc.iteritems():
     # for each sender, we make a separate dataset
     sname = re.match(r'(.*)@.*', sender).group(1).strip()
+    sname = re.sub(' ', '', sname)
     datadir = ''.join([root, sname, '/'])
     os.mkdir(datadir)
 
@@ -53,6 +54,7 @@ for sender, messages in doc.iteritems():
         if m['rtype'] == 'TO':
             # create a label directory is not exists
             rname = re.match(r'(.*)@.*', m['recipient']).group(1).strip()
+            rname = re.sub(' ', '', rname)
             labeldir = ''.join([datadir, rname, '/'])
             if not os.path.exists(labeldir):
                 os.mkdir(labeldir)
