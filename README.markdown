@@ -12,7 +12,11 @@ in your current working directory, type:
 
     git clone git://github.com/pyongjoo/enron.git .
 
-After download has finished, run the following code:
+After download has finished, type the following to dump mysql data into a json file:
+
+    ./dumpIntoFile.py > top5people-sentbox.json
+    
+After that, we can dump again the file contents into labeled directory by entering:
 
     ./dumpFileIntoDir.py [output directory]
 
@@ -27,10 +31,11 @@ It takes several minutes to finish (less than a minute in desktop). The code gen
         - receiver 1
             + file 1
             + file 2
-            + ...
+            + f...
         - receiver 2
+        - r...
     - sender 2
-    - ...
+    - s...
 
 Fow now, the code does not generate training set and test set separately
 according to the written date. It should be done in the near future.
