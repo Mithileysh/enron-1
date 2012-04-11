@@ -3,6 +3,8 @@ rel="stylesheet"></link>
 
 ## Quick Start
 
+### Downloaing from Git repository
+
 First clone this git repository by typing in your working directory:
 
     git clone git://github.com/pyongjoo/enron.git
@@ -11,6 +13,9 @@ It will create a directory *enron*. Otherwise, if you want to clone the dataset
 in your current working directory, type:
 
     git clone git://github.com/pyongjoo/enron.git .
+    
+
+### Generating Dataset
 
 After download has finished, type the following to dump mysql data into a json file:
 
@@ -39,6 +44,7 @@ It takes several minutes to finish (less than a minute in desktop). The code gen
 
 Fow now, the code does not generate training set and test set separately
 according to the written date. It should be done in the near future.
+
 
 
 ## The list of top users and Date
