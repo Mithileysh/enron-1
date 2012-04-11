@@ -1,4 +1,9 @@
 #!/bin/bash
 MalletHome=/home/yongjoo/workspace/mallet-2.0.7
-CMD="$MalletHome/bin/mallet train-topics --input topic-input.mallet --num-topics 100 --output-state topic-state.gz"
+InputFile=topic-input.mallet
+OutputFile=doc-topics.txt
+CMD="$MalletHome/bin/mallet train-topics \
+  --input $InputFile \
+  --num-topics 100 \
+  --output-doc-topics $OutputFile"
 $CMD

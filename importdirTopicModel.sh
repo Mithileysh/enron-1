@@ -1,5 +1,11 @@
 #!/bin/bash
 MalletHome=/home/yongjoo/workspace/mallet-2.0.7
-CMD="$MalletHome/bin/mallet import-dir --input dataset/jeff.dasovich/* --output topic-input.mallet --keep-sequence --remove-stopwords"
+InputDir=exclusiveDataset/jeff.dasovich/*
+OutputFile=topic-input.mallet
+CMD="$MalletHome/bin/mallet import-dir \
+  --input $InputDir \
+  --output $OutputFile \
+  --keep-sequence \
+  --remove-stopwords"
 #echo $CMD
 $CMD
