@@ -1,22 +1,27 @@
+<link href="http://kevinburke.bitbucket.org/markdowncss/markdown.css"
+rel="stylesheet"></link>
+
 ## Quick Start
 
 First clone this git repository by typing in your working directory:
 
     git clone git://github.com/pyongjoo/enron.git
 
-It will create a directory *enron*. Otherwise, if you want to clone the dataset in your current working directory, type:
+It will create a directory *enron*. Otherwise, if you want to clone the dataset
+in your current working directory, type:
 
     git clone git://github.com/pyongjoo/enron.git .
 
 After download has finished, run the following code:
 
     ./dumpFileIntoDir.py [output directory]
-    
+
 or
-    
+
     python dumpFileIntoDir.py [output directory]
 
-It takes several minutes to finish. The code generates following directory structure:
+It takes several minutes to finish. The code generates following directory
+structure:
 
 - [output directory]
     - sender 1
@@ -28,7 +33,8 @@ It takes several minutes to finish. The code generates following directory struc
     - sender 2
     - ...
 
-Fow now, the code does not generate training set and test set separately according to the written date. It should be done in the near future.
+Fow now, the code does not generate training set and test set separately
+according to the written date. It should be done in the near future.
 
 
 ## The list of top users and Date
