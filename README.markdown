@@ -136,6 +136,12 @@ Filter emails with only one recipient:
 
 Retrieve emails sent from a specific user to users to whom the user sent emails more than 10 times, and with only one recipient:
 
+    CREATE table topSenders
+    SELECT sender
+    FROM message
+    GROUP BY sender
+    ORDER BY count(*) desc limit 5
+
     SELECT m.mid as mid, m.sender as sender, m.date as date,
     m.subject as subject, m.body as body, r.rtype as type,
     r.rvalue as recipient
