@@ -99,6 +99,33 @@ according to the written date. It should be done in the near future.
       --output-doc-topics $OutputFile"
     $CMD
 
+### Running Naive Bayes with topics extracted from LDA
+
+Converting mallet topic document to SVM-lignt format:
+
+    ./malletTopicToSVMLight.py doc-topics.txt doc-topic-svmlight.txt
+
+*importsvmlight.sh* - Import SVM-light format into mallet format:
+
+    #!/bin/bash
+    MalletHome=/home/yongjoo/workspace/mallet-2.0.7
+    InputFile=doc-topic-svmlight.txt
+    OutputFile=enronInTopics.mallet
+    CMD="$MalletHome/bin/mallet import-svmlight \
+        --input $InputFile \
+        --output $OutputFile"
+    $CMD
+    
+*runMalletForTopic.sh* - Now run Naive Bayes classifier with the data obtained from the above step:
+
+    #!/bin/bash
+    MalletHome=/home/yongjoo/workspace/mallet-2.0.7
+    InputFile=enronInTopics.mallet
+    CMD="$MalletHome/bin/mallet train-classifier \
+    --input $InputFile \
+    --cross-validation 10"
+    $CMD
+
 
 
 ## The list of top users and Date
