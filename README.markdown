@@ -17,7 +17,7 @@ in your current working directory, type:
 
 ### Generating Dataset
 
-After download has finished, type the following to dump mysql data into a json file:
+(Skip this part if you don't wanna regenerate the file from the database. This git repository is already including the file.). After download has finished, type the following to dump mysql data into a json file:
 
     ./dumpIntoFile.py | python -mjson.tool > top5people-sentbox.json
     
