@@ -146,7 +146,9 @@ Converting mallet topic document to SVM-lignt format:
     5 rows in set (0.60 sec)
 
 
-## Queries used to Extract Data
+## MySQL Queries
+
+### Email Data Extraction
 
 Number of emails sent from a specific person:
 
@@ -256,4 +258,36 @@ Retrieve emails sent from a specific user to users to whom the user sent emails 
             order by sentcount asc) as S
         where S.sentcount > 10
     )
+
+
+### Time Dynamics
+
+See the number of emails sent grouped by recipient and year/month:
+
+    SELECT r.rvalue as recipient, year(m.date) as year,
+    month(m.date) as month, count(*) as count
+    
+    FROM message m
+    inner join recipientinfo r
+    on m.mid = r.mid
+    
+    WHERE m.sender = "jeff.dasovich@enron.com" and
+    r.rtype = 'TO' and
+    m.mid in (
+        select mid
+        from (
+            SELECT m.mid as mid, r.rvalue as recipient, count(*) as count
+            FROM message m
+            inner join recipientinfo r
+            on m.mid = r.mid
+            where m.sender in
+                (select * from topSenders) and
+            r.rtype = 'TO'
+            GROUP by mid) as T
+        WHERE T.count = 1
+    )
+    
+    GROUP BY recipient, year(date), month(date)
+    ORDER BY recipient, m.date asc;
+
 
