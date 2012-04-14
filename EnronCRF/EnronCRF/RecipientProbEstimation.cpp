@@ -24,14 +24,14 @@ ParameterEstimation* RecipientProbEstimation::clone() const {
 
 
 Prob RecipientProbEstimation::estimate() {
+    size_t size = _stats.size();
     
-    // normalize pseudocounts
-    int size = (int) _stats.size();
+    size_t total_sum = 0;
     
-    for (int i = 0; i < size; i++) {
-        cout << _stats[i] << " ";
+    // count the total number of occurrence   
+    for (size_t i = 0; i < size; i++) {
+        total_sum += _stats[i];
     }
-    cout << endl;
     
     // whenever parent index increase, parent variable changes
     // target parent; num
@@ -39,21 +39,31 @@ Prob RecipientProbEstimation::estimate() {
     // 1    0;  1
     // 0    1;  2
     // 1    1;  5
+    
+    // next, count the number of occurrence at diagonal
+    // this is equal to the numbers that parents and children are same.
+    size_t column = 0;
+    size_t diagonal_sum = 0;
+    
+    for (size_t parent = 0; parent < size; parent += _target_dim) {        
+        diagonal_sum += _stats[parent+column];
+        
+        column++;
+    }
+    
+    // based on the calculated 'sum' and 'diagonal sum', reset all the stat values
+    size_t parent_dim = size / _target_dim;
+    Real lamda = (Real) diagonal_sum / (Real) total_sum;
+    Real others = (1 - lamda) / (parent_dim - 1);
+    
+    for (size_t i = 0; i < size; i++) {
+        _stats.set(i, others);
+    }
+    
+    column = 0;
     for (size_t parent = 0; parent < size; parent += _target_dim) {
-        
-        // calculate norm
-        size_t top = parent + _target_dim;
-        Real norm = 0.0;
-        
-        for( size_t i = parent; i < top; ++i )
-            norm += _stats[i];
-        
-        if( norm != 0.0 )
-            norm = 1.0 / norm;
-        
-        // normalize
-        for( size_t i = parent; i < top; ++i )
-            _stats.set( i, _stats[i] * norm );
+        _stats.set(parent + column, lamda);
+        column++;
     }
     
     // reset _stats to _initial_stats

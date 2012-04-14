@@ -16,8 +16,18 @@
 using namespace std;
 using namespace dai;
 
-int main (int argc, const char * argv[])
+void runLearning(const char *fgFile, const char *tabFile, const char *emFile);
+
+int main (int argc, const char *argv[])
 {
+    const char *fgFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.fg";
+    const char *tabFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.tab";
+    const char *emFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.em";
+    
+    runLearning(fgFile, tabFile, emFile);
+}
+
+void runLearning(const char *fgFile, const char *tabFile, const char *emFile) {
     // This example program illustrates how to learn the
     // parameters of a Bayesian network from a sample of
     // the sprinkler network discussed at
@@ -32,7 +42,7 @@ int main (int argc, const char * argv[])
     
     // Read the factorgraph from the file
     FactorGraph SprinklerNetwork;
-    SprinklerNetwork.ReadFromFile( "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.fg" );
+    SprinklerNetwork.ReadFromFile(fgFile);
     
     // Prepare junction-tree object for doing exact inference for E-step
     PropertySet infprops;
@@ -43,12 +53,12 @@ int main (int argc, const char * argv[])
     
     // Read sample from file
     Evidence e;
-    ifstream estream( "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.tab" );
+    ifstream estream(tabFile);
     e.addEvidenceTabFile( estream, SprinklerNetwork );
     cout << "Number of samples: " << e.nrSamples() << endl;
     
     // Read EM specification
-    ifstream emstream( "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.em" );
+    ifstream emstream(emFile);
     EMAlg em(e, *inf, emstream);
     
     // Iterate EM until convergence
@@ -69,7 +79,7 @@ int main (int argc, const char * argv[])
     
     // Clean up
     delete inf;
-    
-    return 0;
 }
+
+
 
