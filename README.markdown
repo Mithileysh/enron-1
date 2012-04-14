@@ -3,6 +3,8 @@ rel="stylesheet"></link>
 
 ## Quick Start
 
+### Downloaing scripts from this Git repository
+
 First clone this git repository by typing in your working directory:
 
     git clone git://github.com/pyongjoo/enron.git
@@ -11,8 +13,11 @@ It will create a directory *enron*. Otherwise, if you want to clone the dataset
 in your current working directory, type:
 
     git clone git://github.com/pyongjoo/enron.git .
+    
 
-After download has finished, type the following to dump mysql data into a json file:
+### Generating Dataset
+
+(Skip this part if you don't wanna regenerate the file from the database. This git repository is already including the file.). After download has finished, type the following to dump mysql data into a json file:
 
     ./dumpIntoFile.py | python -mjson.tool > top5people-sentbox.json
     
@@ -41,6 +46,88 @@ Fow now, the code does not generate training set and test set separately
 according to the written date. It should be done in the near future.
 
 
+### Running Naive Bayes classifier using Mallet library
+
+*importdir.sh* - Import the created dataset into a mallet format (only for Naive Bayes):
+
+    #!/bin/bash
+    MalletHome=/home/yongjoo/workspace/mallet-2.0.7
+    InputDir=exclusiveDataset/jeff.dasovich/*
+    OutputFile=exclusiveEnron.mallet
+    CMD="$MalletHome/bin/mallet import-dir \
+    --input $InputDir \
+    --output $OutputFile"
+    $CMD
+
+
+*runMallet.sh* - Run Naive Bayes trainer with 10-fold cross validation:
+
+    #!/bin/bash
+    MalletHome=/home/yongjoo/workspace/mallet-2.0.7
+    InputFile=exclusiveEnron.mallet
+    CMD="$MalletHome/bin/mallet train-classifier \
+    --input $InputFile \
+    --cross-validation 10"
+    $CMD
+
+
+### Running LDA for feature space reduction
+
+*importdirTopicModel.sh* - Import the created dataset into a mallet format (only for Topic modelling):
+
+    #!/bin/bash
+    MalletHome=/home/yongjoo/workspace/mallet-2.0.7
+    InputDir=exclusiveDataset/jeff.dasovich/*
+    OutputFile=topic-input.mallet
+    CMD="$MalletHome/bin/mallet import-dir \
+      --input $InputDir \
+      --output $OutputFile \
+      --keep-sequence \
+      --remove-stopwords"
+    #echo $CMD
+    $CMD
+
+*runTopicMallet.sh* - Run Topic Modeling Mallet library and save topics for each doc into a file:
+
+    #!/bin/bash
+    MalletHome=/home/yongjoo/workspace/mallet-2.0.7
+    InputFile=topic-input.mallet
+    OutputFile=doc-topics.txt
+    CMD="$MalletHome/bin/mallet train-topics \
+      --input $InputFile \
+      --num-topics 100 \
+      --output-doc-topics $OutputFile"
+    $CMD
+
+### Running Naive Bayes with topics extracted from LDA
+
+Converting mallet topic document to SVM-lignt format:
+
+    ./malletTopicToSVMLight.py doc-topics.txt doc-topic-svmlight.txt
+
+*importsvmlight.sh* - Import SVM-light format into mallet format:
+
+    #!/bin/bash
+    MalletHome=/home/yongjoo/workspace/mallet-2.0.7
+    InputFile=doc-topic-svmlight.txt
+    OutputFile=enronInTopics.mallet
+    CMD="$MalletHome/bin/mallet import-svmlight \
+        --input $InputFile \
+        --output $OutputFile"
+    $CMD
+    
+*runMalletForTopic.sh* - Now run Naive Bayes classifier with the data obtained from the above step:
+
+    #!/bin/bash
+    MalletHome=/home/yongjoo/workspace/mallet-2.0.7
+    InputFile=enronInTopics.mallet
+    CMD="$MalletHome/bin/mallet train-classifier \
+    --input $InputFile \
+    --cross-validation 10"
+    $CMD
+
+
+
 ## The list of top users and Date
 
     mysql> select sender, count(*), min(date), max(date)
@@ -59,7 +146,9 @@ according to the written date. It should be done in the near future.
     5 rows in set (0.60 sec)
 
 
-## Queries to Analyze Data
+## MySQL Queries
+
+### Email Data Extraction
 
 Number of emails sent from a specific person:
 
@@ -111,3 +200,94 @@ Retrieve emails sent from a specific user to users to whom the user sent emails 
             order by sentcount asc) as T
         where T.sentcount > 10
     )
+
+
+Filter emails with only one recipient:
+
+    select mid
+    from (
+        SELECT m.mid as mid, r.rvalue as recipient, count(*) as count
+        FROM message m
+        inner join recipientinfo r
+        on m.mid = r.mid
+        where m.sender in
+            (select * from topSenders) and
+        r.rtype = 'TO'
+        GROUP by mid) as T;
+    WHERE T.count = 1;
+
+
+Retrieve emails sent from a specific user to users to whom the user sent emails more than 10 times, and with only one recipient:
+
+    CREATE table topSenders
+    SELECT sender
+    FROM message
+    GROUP BY sender
+    ORDER BY count(*) desc limit 5
+
+    SELECT m.mid as mid, m.sender as sender, m.date as date,
+    m.subject as subject, m.body as body, r.rtype as type,
+    r.rvalue as recipient
+    FROM message m
+    inner join recipientinfo r
+    on m.mid = r.mid
+    WHERE m.sender = 'jeff.dasovich@enron.com' and
+    m.mid in (
+        select mid
+        from (
+            SELECT m.mid as mid, r.rvalue as recipient, count(*) as count
+            FROM message m
+            inner join recipientinfo r
+            on m.mid = r.mid
+            where m.sender in
+                (select * from topSenders) and
+            r.rtype = 'TO'
+            GROUP by mid) as T
+        WHERE T.count = 1
+    ) and
+    r.rvalue in (
+        select recipient from (
+            select m.mid as mid, m.sender as sender, r.rvalue as recipient,
+            count(*) as sentcount
+            from message m
+            inner join recipientinfo r
+            on m.mid = r.mid
+            where m.sender = 'jeff.dasovich@enron.com' and
+            r.rtype = 'TO'
+            group by r.rvalue
+            order by sentcount asc) as S
+        where S.sentcount > 10
+    )
+
+
+### Time Dynamics
+
+See the number of emails sent grouped by recipient and year/month:
+
+    SELECT r.rvalue as recipient, year(m.date) as year,
+    month(m.date) as month, count(*) as count
+    
+    FROM message m
+    inner join recipientinfo r
+    on m.mid = r.mid
+    
+    WHERE m.sender = "jeff.dasovich@enron.com" and
+    r.rtype = 'TO' and
+    m.mid in (
+        select mid
+        from (
+            SELECT m.mid as mid, r.rvalue as recipient, count(*) as count
+            FROM message m
+            inner join recipientinfo r
+            on m.mid = r.mid
+            where m.sender in
+                (select * from topSenders) and
+            r.rtype = 'TO'
+            GROUP by mid) as T
+        WHERE T.count = 1
+    )
+    
+    GROUP BY recipient, year(date), month(date)
+    ORDER BY recipient, m.date asc;
+
+

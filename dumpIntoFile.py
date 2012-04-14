@@ -43,6 +43,19 @@ def dumpIntoDir():
             inner join recipientinfo r
             on m.mid = r.mid
             WHERE m.sender = '%s' and
+            m.mid in (
+                select mid
+                from (
+                    SELECT m.mid as mid, r.rvalue as recipient, count(*) as count
+                    FROM message m
+                    inner join recipientinfo r
+                    on m.mid = r.mid
+                    where m.sender in
+                        (select * from topSenders) and
+                    r.rtype = 'TO'
+                    GROUP by mid) as T
+                WHERE T.count = 1
+            ) and
             r.rvalue in (
                 select recipient from (
                     select m.mid as mid, m.sender as sender, r.rvalue as recipient,
@@ -53,9 +66,10 @@ def dumpIntoDir():
                     where m.sender = '%s' and
                     r.rtype = 'TO'
                     group by r.rvalue
-                    order by sentcount asc) as T
-                where T.sentcount > 10
-            )""" % (sender, sender)
+                    order by sentcount asc) as S
+                where S.sentcount > 10
+            )
+            """ % (sender, sender)
 
             cur.execute(query)
 
