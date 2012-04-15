@@ -11,10 +11,59 @@
 #include "UnsafeEmalg.h"
 
 using namespace dai;
+using namespace std;
 
 UnsafeEmalg::UnsafeEmalg(const Evidence &evidence, InfAlg &estep, std::istream &mstep_file)
 : EMAlg(evidence, estep, mstep_file) {
     
+}
+
+Real UnsafeEmalg::iterateWithoutEstep() {
+    Real likelihood;
+    
+    for(size_t i = 0; i < _msteps.size(); ++i)
+        likelihood = iterateWithoutEstep(_msteps[i]);
+    
+    _lastLogZ.push_back(likelihood);
+    ++_iters;
+    
+    return likelihood;
+}
+
+
+Real UnsafeEmalg::iterateWithoutEstep(MaximizationStep &mstep) {
+    Real logZ = 0;
+    Real likelihood = 0;
+    
+//    _estep.run();
+//    logZ = _estep.logZ();
+    
+    // Expectation calculation
+    for( Evidence::const_iterator e = _evidence.begin(); e != _evidence.end(); ++e ) { 
+        InfAlg* clamped = _estep.clone();
+        
+        // Apply evidence
+        for( Evidence::Observation::const_iterator i = e->begin(); i != e->end(); ++i )
+            clamped->clamp( clamped->fg().findVar(i->first), i->second );
+        
+//        clamped->init();
+//        clamped->run();
+        
+//        likelihood += clamped->logZ() - logZ;
+        
+        cout << ".";
+        
+        mstep.addExpectations( *clamped );
+        
+        delete clamped;
+    }
+    
+    cout << "into m step" << endl;
+    
+    // Maximization of parameters
+    mstep.maximize(_estep.fg());
+    
+    return likelihood;
 }
 
 Real UnsafeEmalg::iterate(MaximizationStep &mstep) {
@@ -27,19 +76,19 @@ Real UnsafeEmalg::iterate(MaximizationStep &mstep) {
     // Expectation calculation
     for( Evidence::const_iterator e = _evidence.begin(); e != _evidence.end(); ++e ) { 
         InfAlg* clamped = _estep.clone();
-//        
-//        // Apply evidence
+        
+        // Apply evidence
         for( Evidence::Observation::const_iterator i = e->begin(); i != e->end(); ++i )
             clamped->clamp( clamped->fg().findVar(i->first), i->second );
-//        
-//        clamped->init();
-//        clamped->run();
-//        
-//        likelihood += clamped->logZ() - logZ;
+        
+        clamped->init();
+        clamped->run();
+        
+        likelihood += clamped->logZ() - logZ;
         
         mstep.addExpectations( *clamped );
         
-//        delete clamped;
+        delete clamped;
     }       
     
     // Maximization of parameters

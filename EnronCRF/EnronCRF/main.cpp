@@ -28,10 +28,14 @@ int main (int argc, const char *argv[])
 //    const char *tabFile = "/Users/yongjoo/workspace/enron/EnronCRF/naive.tab";
 //    const char *emFile = "/Users/yongjoo/workspace/enron/EnronCRF/naive.em";
     
-    const char *fgFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.fg";
-    const char *tabFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.tab";
-    const char *emFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.em";
+//    const char *fgFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.fg";
+//    const char *tabFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.tab";
+//    const char *emFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.em";
 
+    
+    const char *fgFile = "/Users/yongjoo/workspace/enron/EnronCRF/recipients.fg";
+    const char *tabFile = "/Users/yongjoo/workspace/enron/EnronCRF/recipients.tab";
+    const char *emFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.em";
     
     runLearning(fgFile, tabFile, emFile);
     
@@ -63,33 +67,60 @@ void runLearning(const char *fgFile, const char *tabFile, const char *emFile) {
     infprops.set("logdomain", false);
     InfAlg* inf = newInfAlg("BP", fg, infprops);
     inf->init();
+    inf->run();
     
     // Read sample from file
-    Evidence e;
+    Evidence evid;
     ifstream estream(tabFile);
-    e.addEvidenceTabFile(estream, fg);
-    cout << "Number of samples: " << e.nrSamples() << endl;
+    evid.addEvidenceTabFile(estream, fg);
+    cout << "Number of samples: " << evid.nrSamples() << endl;
     
+    
+    for( Evidence::const_iterator e = evid.begin(); e != evid.end(); ++e ) { 
+        InfAlg* clamped = inf->clone();
+        
+        // Apply evidence
+        for( Evidence::Observation::const_iterator i = e->begin(); i != e->end(); ++i )
+            clamped->clamp( clamped->fg().findVar(i->first), i->second );
+        
+        clamped->init();
+        clamped->run();
+        
+        // Report factor marginals for fg, calculated by the belief propagation algorithm
+        cout << "Approximate (loopy belief propagation) factor marginals:" << endl;
+        for( size_t I = 0; I < fg.nrFactors(); I++ ) // iterate over all factors in fg
+            cout << clamped->belief(fg.factor(I).vars()) << endl; // display the belief of bp for the variables in that factor
+        
+//        likelihood += clamped->logZ() - logZ;
+        
+//        cout << ".";
+        
+        delete clamped;
+    }
+    
+    
+    /*
     // Read EM specification
     ifstream emstream(emFile);
-    UnsafeEmalg em(e, *inf, emstream);
+    UnsafeEmalg em(evid, *inf, emstream);
     
     // Iterate EM until convergence
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 1; i++) {
 //    while( !em.hasSatisfiedTermConditions() ) {
-        Real l = em.iterate();
+        Real l = em.iterateWithoutEstep();
         cout << "Iteration " << em.Iterations() << " likelihood: " << l <<endl;
     }
     
     // Output true factor graph
     cout << endl << "True factor graph:" << endl << "##################" << endl;
     cout.precision(12);
-    cout << fg;
+//    cout << fg;
     
     // Output learned factor graph
     cout << endl << "Learned factor graph:" << endl << "#####################" << endl;
     cout.precision(12);
-    cout << inf->fg();
+//    cout << inf->fg();
+     */
     
     // Clean up
     delete inf;

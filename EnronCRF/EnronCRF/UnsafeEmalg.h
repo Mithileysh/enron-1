@@ -18,6 +18,9 @@ class UnsafeEmalg : public EMAlg {
 public:
     UnsafeEmalg(const Evidence &evidence, InfAlg &estep, std::istream &mstep_file);
     
+    virtual Real iterateWithoutEstep();
+    virtual Real iterateWithoutEstep(MaximizationStep &mstep);
+    
     virtual Real iterate(MaximizationStep &mstep);
     virtual Real iterate();
 };
