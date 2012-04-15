@@ -9,9 +9,13 @@
 #include <iostream>
 #include <fstream>
 #include <dai/alldai.h>
+#include <dai/jtree.h>
+#include <dai/bp.h>
+#include <dai/decmap.h>
 
 #include "splinkler-example.h"
 #include "RecipientProbEstimation.h"
+#include "UnsafeEmalg.h"
 
 using namespace std;
 using namespace dai;
@@ -20,11 +24,18 @@ void runLearning(const char *fgFile, const char *tabFile, const char *emFile);
 
 int main (int argc, const char *argv[])
 {
+//    const char *fgFile = "/Users/yongjoo/workspace/enron/EnronCRF/naive.fg";
+//    const char *tabFile = "/Users/yongjoo/workspace/enron/EnronCRF/naive.tab";
+//    const char *emFile = "/Users/yongjoo/workspace/enron/EnronCRF/naive.em";
+    
     const char *fgFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.fg";
     const char *tabFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.tab";
     const char *emFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.em";
+
     
     runLearning(fgFile, tabFile, emFile);
+    
+    return 0;
 }
 
 void runLearning(const char *fgFile, const char *tabFile, const char *emFile) {
@@ -41,28 +52,31 @@ void runLearning(const char *fgFile, const char *tabFile, const char *emFile) {
     ParameterEstimation::registerMethod("RecipientProbEstimation", RecipientProbEstimation::factory);
     
     // Read the factorgraph from the file
-    FactorGraph SprinklerNetwork;
-    SprinklerNetwork.ReadFromFile(fgFile);
+    FactorGraph fg;
+    fg.ReadFromFile(fgFile);
     
-    // Prepare junction-tree object for doing exact inference for E-step
     PropertySet infprops;
-    infprops.set( "verbose", (size_t)1 );
-    infprops.set( "updates", string("HUGIN") );
-    InfAlg* inf = newInfAlg( "JTREE", SprinklerNetwork, infprops );
+    infprops.set("verbose", (size_t) 1);
+    infprops.set("updates", string("SEQRND"));  // SEQRND
+    infprops.set("maxiter", (size_t) 3);  // Maximum number of iterations
+    infprops.set("tol", 1e-5);          // Tolerance for convergence
+    infprops.set("logdomain", false);
+    InfAlg* inf = newInfAlg("BP", fg, infprops);
     inf->init();
     
     // Read sample from file
     Evidence e;
     ifstream estream(tabFile);
-    e.addEvidenceTabFile( estream, SprinklerNetwork );
+    e.addEvidenceTabFile(estream, fg);
     cout << "Number of samples: " << e.nrSamples() << endl;
     
     // Read EM specification
     ifstream emstream(emFile);
-    EMAlg em(e, *inf, emstream);
+    UnsafeEmalg em(e, *inf, emstream);
     
     // Iterate EM until convergence
-    while( !em.hasSatisfiedTermConditions() ) {
+    for (int i = 0; i < 5; i++) {
+//    while( !em.hasSatisfiedTermConditions() ) {
         Real l = em.iterate();
         cout << "Iteration " << em.Iterations() << " likelihood: " << l <<endl;
     }
@@ -70,7 +84,7 @@ void runLearning(const char *fgFile, const char *tabFile, const char *emFile) {
     // Output true factor graph
     cout << endl << "True factor graph:" << endl << "##################" << endl;
     cout.precision(12);
-    cout << SprinklerNetwork;
+    cout << fg;
     
     // Output learned factor graph
     cout << endl << "Learned factor graph:" << endl << "#####################" << endl;
