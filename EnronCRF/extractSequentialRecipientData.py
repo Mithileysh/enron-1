@@ -108,11 +108,10 @@ try:
         fg.write(str(i) + ' ' + str(i+1) + '\n')
         dim = recipientIndexer.size()
         fg.write(str(dim) + ' ' + str(dim) + '\n')
-        fg.write('1\n')
-        fg.write('0\t1\n')
+        fg.write(str(dim * dim) + '\n')     # number of entries
 
-        #for k in range(dim * dim):
-            #fg.write(str(i) + '\t' + str(float(1) / float(dim * dim)) + '\n')
+        for k in range(dim * dim):
+            fg.write(str(k) + '\t' + str(float(1) / float(dim * dim)) + '\n')
 
     fg.close()
 
@@ -122,13 +121,18 @@ try:
 
     # print header
     for i in range(len(rows)):
-        tab.write(str(i) + '\t')
+        tab.write(str(i))
+        if i != len(rows) - 1:
+            tab.write('\t')
+
     tab.write('\n\n')
 
     # print evidence
-    for row in rows:
+    for i, row in enumerate(rows):
         label = recipientIndexer.getIndex(row['recipient'])
-        tab.write(str(label) + '\t')
+        tab.write(str(label))
+        if i != len(rows) - 1:
+            tab.write('\t')
 
     tab.write('\n')
     tab.close()
@@ -146,12 +150,14 @@ try:
             str(dim) + ',total_dim=' +
             str(dim * dim) + ']\n')
 
-    em.write(str(len(rows) - 1))    # number of factors 
+    em.write(str(len(rows) - 1) + '\n')    # number of factors 
 
     for i in range(len(rows) - 1):
         em.write(str(i) + ' ' +
                 str(i) + ' ' +
                 str(i + 1) + '\n')
+
+    em.close()
 
 
 except mdb.Error, e:
