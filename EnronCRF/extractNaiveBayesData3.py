@@ -80,6 +80,15 @@ class RecipientIndexer:
 
 recipientIndexer = RecipientIndexer()
 
+# stop list process
+stoplist = []
+for line in open('stoplist.txt'):
+    word = line.rstrip('\n')
+    stoplist.append(word)
+
+def isStopWord(word):
+    return True if word in stoplist else False
+
 
 con = None
 
@@ -99,8 +108,11 @@ try:
         words = re.findall(r'\w+', row['body'])
 
         for word in words:
-            tab.write(str(recipientIndexer.getIndex(r)) + '\t' +
-                    str(wordIndexer.getIndex(word)) + '\n')
+            if isStopWord(word):
+                continue
+            else:
+                tab.write(str(recipientIndexer.getIndex(r)) + '\t' +
+                        str(wordIndexer.getIndex(word)) + '\n')
 
     tab.close()
 
