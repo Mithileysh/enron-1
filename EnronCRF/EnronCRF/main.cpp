@@ -16,11 +16,12 @@
 #include "splinkler-example.h"
 #include "RecipientProbEstimation.h"
 #include "UnsafeEmalg.h"
+#include "libUtils.h"
+
 
 using namespace std;
 using namespace dai;
 
-void runLearning(const char *fgFile, const char *tabFile, const char *emFile);
 
 int main (int argc, const char *argv[])
 {
@@ -28,19 +29,29 @@ int main (int argc, const char *argv[])
 //    const char *tabFile = "/Users/yongjoo/workspace/enron/EnronCRF/naive.tab";
 //    const char *emFile = "/Users/yongjoo/workspace/enron/EnronCRF/naive.em";
     
-//    const char *fgFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.fg";
-//    const char *tabFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.tab";
-//    const char *emFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.em";
+    const char *fgFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.fg";
+    const char *tabFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.tab";
+    const char *emFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.em";
 
     
-    const char *fgFile = "/Users/yongjoo/workspace/enron/EnronCRF/recipients.fg";
-    const char *tabFile = "/Users/yongjoo/workspace/enron/EnronCRF/recipients.tab";
-    const char *emFile = "/Users/yongjoo/workspace/enron/EnronCRF/naivebayes.em";
+//    const char *fgFile = "/Users/yongjoo/workspace/enron/EnronCRF/recipients.fg";
+//    const char *tabFile = "/Users/yongjoo/workspace/enron/EnronCRF/recipients.tab";
+//    const char *emFile = "/Users/yongjoo/workspace/enron/EnronCRF/recipients.em";
     
-    runLearning(fgFile, tabFile, emFile);
+//    runLearning(fgFile, tabFile, emFile);
+    
+    Factor f = YPTools::getAFactorWithLearnedParameter(argc, argv);
+    YPTools::printFactor(f);
     
     return 0;
 }
+
+
+
+
+
+
+
 
 void runLearning(const char *fgFile, const char *tabFile, const char *emFile) {
     // This example program illustrates how to learn the
@@ -66,10 +77,9 @@ void runLearning(const char *fgFile, const char *tabFile, const char *emFile) {
     infprops.set("tol", 1e-5);          // Tolerance for convergence
     infprops.set("logdomain", false);
     InfAlg* inf = newInfAlg("BP", fg, infprops);
-    inf->init();
-    inf->run();
     
-    // Read sample from file
+    
+    // Read evidence from file
     Evidence evid;
     ifstream estream(tabFile);
     evid.addEvidenceTabFile(estream, fg);
@@ -77,7 +87,7 @@ void runLearning(const char *fgFile, const char *tabFile, const char *emFile) {
     
     
     for( Evidence::const_iterator e = evid.begin(); e != evid.end(); ++e ) { 
-        InfAlg* clamped = inf->clone();
+        InfAlg* clamped = inf;
         
         // Apply evidence
         for( Evidence::Observation::const_iterator i = e->begin(); i != e->end(); ++i )
@@ -85,42 +95,35 @@ void runLearning(const char *fgFile, const char *tabFile, const char *emFile) {
         
         clamped->init();
         clamped->run();
-        
-        // Report factor marginals for fg, calculated by the belief propagation algorithm
-        cout << "Approximate (loopy belief propagation) factor marginals:" << endl;
-        for( size_t I = 0; I < fg.nrFactors(); I++ ) // iterate over all factors in fg
-            cout << clamped->belief(fg.factor(I).vars()) << endl; // display the belief of bp for the variables in that factor
-        
-//        likelihood += clamped->logZ() - logZ;
-        
-//        cout << ".";
-        
-        delete clamped;
     }
-    
     
     /*
     // Read EM specification
     ifstream emstream(emFile);
-    UnsafeEmalg em(evid, *inf, emstream);
+    EMAlg em(evid, *inf, emstream);
+    
     
     // Iterate EM until convergence
     for (int i = 0; i < 1; i++) {
 //    while( !em.hasSatisfiedTermConditions() ) {
-        Real l = em.iterateWithoutEstep();
+        Real l = em.iterate();
         cout << "Iteration " << em.Iterations() << " likelihood: " << l <<endl;
     }
     
+     */
     // Output true factor graph
     cout << endl << "True factor graph:" << endl << "##################" << endl;
     cout.precision(12);
-//    cout << fg;
+    cout << fg;
     
     // Output learned factor graph
     cout << endl << "Learned factor graph:" << endl << "#####################" << endl;
     cout.precision(12);
-//    cout << inf->fg();
-     */
+    
+    cout << inf->fg();
+    
+    cout << (*inf).belief(fg.var(1)) << endl; // display the belief of bp for the variables in that factor
+    
     
     // Clean up
     delete inf;

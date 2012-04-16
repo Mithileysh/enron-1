@@ -91,75 +91,43 @@ try:
 
     rows = cur.fetchall()
 
-    # We will write a fg file as we read the data
-    fg = open('recipients.fg', 'w')
-    fg.write(str(len(rows) - 1) + '\n')  # number of factors
+    tab = open('naive.tab', 'w')
 
-    # this is to count the number of unique recipients
+    tab.write('0\t1\n\n')
     for row in rows:
-        recipientIndexer.addName(row['recipient'])
+        r = row['recipient']
+        words = re.findall(r'\w+', row['body'])
 
-    # not print the labeled contents to file
-    for i, row in enumerate(rows[0:len(rows)-1]):
-        recipient = row['recipient']
-        body = row['body']
+        for word in words:
+            tab.write(str(recipientIndexer.getIndex(r)) + '\t' +
+                    str(wordIndexer.getIndex(word)) + '\n')
 
-        fg.write('\n')          # put blank line before each factor block
-        fg.write('2\n')
-        fg.write(str(i) + ' ' + str(i+1) + '\n')
-        dim = recipientIndexer.size()
-        fg.write(str(dim) + ' ' + str(dim) + '\n')
-        fg.write(str(dim * dim) + '\n')     # number of entries
+    tab.close()
 
-        for k in range(dim * dim):
-            fg.write(str(k) + '\t' + str(float(1) / float(dim * dim)) + '\n')
+
+    fg = open('naive.fg', 'w')
+    fg.write('1\n\n')
+    fg.write('2\n')
+    fg.write('0 1\n')
+    fg.write(str(recipientIndexer.size()) + ' ' +
+            str(wordIndexer.size()) + '\n')
+    fg.write(str(recipientIndexer.size() * 
+        wordIndexer.size()) + '\n')
+
+    for i in range(recipientIndexer.size() * wordIndexer.size()):
+        fg.write(str(i) + ' 1\n')
 
     fg.close()
 
 
-    # We will write a tab file
-    tab = open('recipients.tab', 'w')
-
-    # print header
-    for i in range(len(rows)):
-        tab.write(str(i))
-        if i != len(rows) - 1:
-            tab.write('\t')
-
-    tab.write('\n\n')
-
-    # print evidence
-    for i, row in enumerate(rows):
-        label = recipientIndexer.getIndex(row['recipient'])
-        tab.write(str(label))
-        if i != len(rows) - 1:
-            tab.write('\t')
-
-    tab.write('\n')
-    tab.close()
-
-
-    # We will write a parameter estimation file
-    em = open('recipients.em', 'w')
-
-    # print header
+    em = open('naive.em', 'w')
     em.write('1\n\n')
-
-    # print maximization step
-    em.write('1\n')     # number of shared parameters block
-    em.write('RecipientProbEstimation [target_dim=' +
-            str(dim) + ',total_dim=' +
-            str(dim * dim) + ']\n')
-
-    em.write(str(len(rows) - 1) + '\n')    # number of factors 
-
-    for i in range(len(rows) - 1):
-        em.write(str(i) + ' ' +
-                str(i) + ' ' +
-                str(i + 1) + '\n')
-
-    em.close()
-
+    em.write('1\n')
+    em.write('CondProbEstimation [target_dim=' +
+            str(recipientIndexer.size()) + ',total_dim=' +
+            str(recipientIndexer.size() * wordIndexer.size()) + ']\n')
+    em.write('1\n')
+    em.write('0 0 1\n')
 
 except mdb.Error, e:
     print "Error %d: %s" % (e.args[0],e.args[1])

@@ -41,7 +41,7 @@ r.rvalue in (
 ) and
 r.rtype = 'TO'
 order by m.date
-limit 10
+limit 1, 3
 """
 
 class WordIndexer:
@@ -91,75 +91,85 @@ try:
 
     rows = cur.fetchall()
 
-    # We will write a fg file as we read the data
-    fg = open('recipients.fg', 'w')
-    fg.write(str(len(rows) - 1) + '\n')  # number of factors
+    fg = open('naive.fg', 'w')
+    tab = open('naive.tab', 'w')
+    em = open('naive.em', 'w')
 
-    # this is to count the number of unique recipients
+    numFactors = 0
     for row in rows:
-        recipientIndexer.addName(row['recipient'])
-
-    # not print the labeled contents to file
-    for i, row in enumerate(rows[0:len(rows)-1]):
         recipient = row['recipient']
         body = row['body']
 
-        fg.write('\n')          # put blank line before each factor block
-        fg.write('2\n')
-        fg.write(str(i) + ' ' + str(i+1) + '\n')
-        dim = recipientIndexer.size()
-        fg.write(str(dim) + ' ' + str(dim) + '\n')
-        fg.write(str(dim * dim) + '\n')     # number of entries
+        recipientIndexer.addName(recipient)
 
-        for k in range(dim * dim):
-            fg.write(str(k) + '\t' + str(float(1) / float(dim * dim)) + '\n')
+        words = re.findall(r'\w+', body)
+        numFactors += len(words)
 
-    fg.close()
+        for word in words:
+            wordIndexer.getIndex(word)
 
+    fg.write(str(numFactors) + '\n')
 
-    # We will write a tab file
-    tab = open('recipients.tab', 'w')
+    tabHeader = ""
+    tabEvidence = ""
 
-    # print header
-    for i in range(len(rows)):
-        tab.write(str(i))
-        if i != len(rows) - 1:
-            tab.write('\t')
+    # label index
+    parentLabelIndex = 0
+    childLabelIndex = 0
+    nextLabelIndex = 0
 
-    tab.write('\n\n')
+    # factor index
+    currentFactor = 0
+    nextFactor = 0
 
-    # print evidence
-    for i, row in enumerate(rows):
-        label = recipientIndexer.getIndex(row['recipient'])
-        tab.write(str(label))
-        if i != len(rows) - 1:
-            tab.write('\t')
+    # write em file
+    em.write('1\n\n')   # number of maximization step
+    em.write('1\n')     # number of shared blocks
+    em.write('CondProbEstimation [target_dim=' +
+            str(recipientIndexer.size()) + ',total_dim=' +
+            str(recipientIndexer.size() * wordIndexer.size()) + ']\n')
+    em.write(str(numFactors) + '\n')
 
-    tab.write('\n')
-    tab.close()
+    for row in rows:
+        recipient = row['recipient']
+        body = row['body']
+        words = re.findall(r'\w+', body)
 
+        parentLabelIndex = nextLabelIndex
+        nextLabelIndex += 1
 
-    # We will write a parameter estimation file
-    em = open('recipients.em', 'w')
+        tabHeader += str(parentLabelIndex) + '\t'
+        tabEvidence += str(recipientIndexer.getIndex(recipient)) + '\t'
 
-    # print header
-    em.write('1\n\n')
+        for word in words:
+            childLabelIndex = nextLabelIndex
+            nextLabelIndex += 1
 
-    # print maximization step
-    em.write('1\n')     # number of shared parameters block
-    em.write('RecipientProbEstimation [target_dim=' +
-            str(dim) + ',total_dim=' +
-            str(dim * dim) + ']\n')
+            tabHeader += str(childLabelIndex) + '\t'
+            tabEvidence += str(wordIndexer.getIndex(word)) + '\t'
 
-    em.write(str(len(rows) - 1) + '\n')    # number of factors 
+            fg.write('\n' + str(2) + '\n')
+            fg.write(str(parentLabelIndex) + ' ' + str(childLabelIndex) + '\n')
+            fg.write(str(recipientIndexer.size()) + ' '
+                    + str(wordIndexer.size()) + '\n')
 
-    for i in range(len(rows) - 1):
-        em.write(str(i) + ' ' +
-                str(i) + ' ' +
-                str(i + 1) + '\n')
+            fg.write('1\n')
+            fg.write('0 1\n')
 
-    em.close()
+            #fg.write(str(recipientIndexer.size() * wordIndexer.size()) + '\n')
 
+            #for i in range(recipientIndexer.size() * wordIndexer.size()):
+                #fg.write(str(i) + ' 1\n')
+
+            currentFactor = nextFactor
+            nextFactor += 1
+
+            em.write(str(currentFactor) + ' '
+                    + str(parentLabelIndex) + ' '
+                    + str(childLabelIndex) + '\n')
+
+    tab.write(tabHeader.rstrip('\t') + '\n\n')
+    tab.write(tabEvidence.rstrip('\t') + '\n')
 
 except mdb.Error, e:
     print "Error %d: %s" % (e.args[0],e.args[1])
