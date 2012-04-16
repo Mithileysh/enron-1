@@ -40,6 +40,8 @@ Real UnsafeEmalg::iterateWithoutEstep(MaximizationStep &mstep) {
     Real likelihood = 0;
 
     // Expectation calculation
+    int nProcessed = 0;
+    
     for( Evidence::const_iterator e = _evidence.begin(); e != _evidence.end(); ++e ) { 
         InfAlg* clamped = _estep.clone();
         
@@ -47,11 +49,15 @@ Real UnsafeEmalg::iterateWithoutEstep(MaximizationStep &mstep) {
         for( Evidence::Observation::const_iterator i = e->begin(); i != e->end(); ++i )
             clamped->clamp( clamped->fg().findVar(i->first), i->second );
         
-//        cout << clamped->fg() << endl;
-        
         mstep.addExpectations( *clamped );
         
         delete clamped;
+        
+        nProcessed++;
+        
+        if (nProcessed % 10000 == 0) {
+            cout << nProcessed << " number of samples processed" << endl;
+        }
     }
     
     // Maximization of parameters
