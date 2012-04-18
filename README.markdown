@@ -290,4 +290,40 @@ See the number of emails sent grouped by recipient and year/month:
     GROUP BY recipient, year(date), month(date)
     ORDER BY recipient, m.date asc;
 
+Below SQL might be better:
 
+    SELECT m.mid as mid, m.sender as sender, m.date as date,
+    m.subject as subject, r.rtype as type, m.body as body,
+    r.rvalue as recipient
+    FROM message m
+    inner join recipientinfo r
+    on m.mid = r.mid
+    WHERE m.sender = 'jeff.dasovich@enron.com' and
+    m.mid in (
+        select mid
+        from (
+            SELECT m.mid as mid, r.rvalue as recipient, count(*) as count
+            FROM message m
+            inner join recipientinfo r
+            on m.mid = r.mid
+            where m.sender in
+                (select * from topSenders) and
+            r.rtype = 'TO'
+            GROUP by mid) as T
+        WHERE T.count = 1
+    ) and
+    r.rvalue in (
+        select recipient from (
+            select m.mid as mid, m.sender as sender, r.rvalue as recipient,
+            count(*) as sentcount
+            from message m
+            inner join recipientinfo r
+            on m.mid = r.mid
+            where m.sender = 'jeff.dasovich@enron.com' and
+            r.rtype = 'TO'
+            group by r.rvalue
+            order by sentcount asc) as S
+        where S.sentcount > 10
+    ) and
+    r.rtype = 'TO'
+    order by m.date;
