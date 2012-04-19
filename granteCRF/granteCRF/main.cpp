@@ -32,9 +32,12 @@ int main (int argc, const char * argv[])
 
     SVMLightReader reader(argv[1]);
 
+    cout << "Number of unique topics: " << reader.card()[0] << endl;
+    cout << "Number of unique words: " << reader.card()[1] << endl;
+
     //reader.print();
 
-    FactorBuilder builder;
+    FactorBuilder builder(0);
 
     builder.build(reader.data_vector(),
             reader.data_idx_vector(),

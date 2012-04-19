@@ -19,7 +19,7 @@ class FactorBuilder {
 
 public:
 
-    FactorBuilder();
+    FactorBuilder(unsigned int order = 0);
 
     void build (vector< data_instance > &data_vector,
             vector< data_idx_instance > &data_idx_vector,
@@ -39,6 +39,12 @@ private:
 
     Grante::FactorGraph* _fg;
 
+    // Order of the CRF
+    // 0: Naive Bayes
+    // 1: First Order CRF
+    // 2: Second Order CRF
+    // 3-: Multiple Order CRF
+    unsigned int _chain_order;
 
 };
 

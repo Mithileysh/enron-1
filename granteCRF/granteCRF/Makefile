@@ -1,12 +1,11 @@
-CC=g++
-INCLUDE=-I/usr/include -I/home/yongjoo/workspace/grante-1.0/src
-LIBRARY=-L/usr/lib -L/home/yongjoo/workspace/grante-1.0/lib
+include Makefile.conf
+
 FLAGS=-lboost_serialization -lgrante -O2
 OUT=-o a.out
-ARGS=$(FLAGS) $(INCLUDE) $(LIBRARY) $(OUT)
+ARGS=$(INCLUDE) $(LIBRARY) $(FLAGS) $(OUT)
 
 all:
-	$(CC) main.cpp svmlightReader.cpp factorBuilder.cpp $(ARGS)
+	$(CC) $(ARGS) main.cpp svmlightReader.cpp factorBuilder.cpp
 
 naivetest:
 	$(CC) $(ARGS) naivebayes_test.cpp naivebayes.cpp
