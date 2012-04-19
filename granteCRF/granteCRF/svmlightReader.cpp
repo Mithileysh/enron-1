@@ -1,5 +1,5 @@
 
-#include "SVMLightReader.h"
+#include "svmlightReader.h"
 
 #include <iostream>
 #include <fstream>

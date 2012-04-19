@@ -19,7 +19,7 @@
 #include <TreeInference.h>
 #include <MaximumLikelihood.h>
 
-#include "SVMLightReader.h"
+#include "svmlightReader.h"
 #include "factorBuilder.h"
 
 using namespace std;

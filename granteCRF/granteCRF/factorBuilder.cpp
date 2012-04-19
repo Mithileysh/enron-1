@@ -1,7 +1,7 @@
 
 
 #include "factorBuilder.h"
-#include "SVMLightReader.h"
+#include "svmlightReader.h"
 
 #include <FactorType.h>
 #include <FactorGraph.h>
