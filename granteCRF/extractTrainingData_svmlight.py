@@ -41,6 +41,7 @@ r.rvalue in (
 ) and
 r.rtype = 'TO'
 order by m.date
+limit 500
 """
 
 class WordIndexer:
@@ -99,11 +100,12 @@ try:
 
     rows = cur.fetchall()
 
-    of = open('bigtraining.svmlight', 'w')
+    of = open('midtraining.svmlight', 'w')
 
     for row in rows:
         r = row['recipient']
-        words = re.findall(r'\w+', row['body'] + row['subject'])
+        #words = re.findall(r'\w+', row['body'] + row['subject'])
+        words = re.findall(r'\w+', row['body'])
 
         of.write(str(recipientIndexer.getIndex(r)))
 

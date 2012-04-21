@@ -1,11 +1,11 @@
 include Makefile.conf
 
-FLAGS=-lboost_serialization -lgrante -O2
+FLAGS=-lboost_serialization -lgrante -O0 -g
 OUT=-o a.out
 ARGS=$(INCLUDE) $(LIBRARY) $(FLAGS) $(OUT)
 
 all:
-	$(CC) $(ARGS) main.cpp svmlightReader.cpp factorBuilder.cpp
+	$(CC) main.cpp svmlightReader.cpp factorBuilder.cpp $(ARGS)
 
 naivetest:
 	$(CC) $(ARGS) naivebayes_test.cpp naivebayes.cpp
