@@ -145,6 +145,13 @@ Converting mallet topic document to SVM-lignt format:
     +---------------------------+----------+---------------------+---------------------+
     5 rows in set (0.60 sec)
 
+Here's a list of new top 5 users:
+
+    richard.shapiro@enron.com
+    jeff.dasovich@enron.com
+    tana.jones@enron.com
+    sara.shackleton@enron.com
+    mark.taylor@enron.com
 
 ## MySQL Queries
 
