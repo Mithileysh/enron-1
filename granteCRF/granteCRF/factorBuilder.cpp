@@ -11,6 +11,10 @@
 #include <InferenceMethod.h>
 #include <TreeInference.h>
 #include <MaximumLikelihood.h>
+#include <NormalPrior.h>
+#include <FactorGraphPartialObservation.h>
+#include <ExpectationMaximization.h>
+#include <BeliefPropagation.h>
 
 
 using namespace std;
@@ -19,15 +23,16 @@ using namespace Grante;
 using namespace pyongjoo;
 
 
-FactorBuilder::FactorBuilder(unsigned int order) : _chain_order(order) {
+FactorBuilder::FactorBuilder(unsigned int order) : _chain_order(order), _fg(NULL) {
 
 }
 
 
 void FactorBuilder::build (vector< data_instance > &data_vector,
             vector< data_idx_instance > &data_idx_vector,
-            vector< unsigned int > &observations,
-            vector< unsigned int > &card)
+            vector< unsigned int > &card,
+            vector< unsigned int > &partial_observations,
+            vector< unsigned int > &var_subset)
 {
     // Read in training data
     //vector<Grante::ParameterEstimationMethod::labeled_instance_type>
@@ -83,7 +88,7 @@ void FactorBuilder::build (vector< data_instance > &data_vector,
     _model.AddFactorType(ft_topic);
 
     // Create a Factor Graph with Topic nodes
-    std::vector<unsigned int> ft_naive_varcard(observations.size(), topic_card);
+    std::vector<unsigned int> ft_naive_varcard(data_vector.size(), topic_card);
     Grante::FactorGraph* fg = new Grante::FactorGraph(&_model, ft_naive_varcard);
 
     // Back up the factor graph into member variable
@@ -93,7 +98,7 @@ void FactorBuilder::build (vector< data_instance > &data_vector,
     // Add factors to the Factor Graph
 
     // add naive bayes factors
-    for (unsigned int ci = 0; ci < observations.size(); ++ci) {
+    for (unsigned int ci = 0; ci < data_vector.size(); ++ci) {
 
         std::vector<unsigned int> factor_varindex(1, ci);
 
@@ -112,10 +117,10 @@ void FactorBuilder::build (vector< data_instance > &data_vector,
 
 
     // add edges between topic (or recipient) nodes
-    for (unsigned int ci = 0; ci < observations.size(); ++ci) {
+    for (unsigned int ci = 0; ci < data_vector.size(); ++ci) {
         // we add edges looking forward
         for (unsigned int ii = 1; ii <= _chain_order; ii++) {
-            if (ci + ii >= observations.size()) {
+            if (ci + ii >= data_vector.size()) {
                 continue;
             }
             else {
@@ -134,13 +139,8 @@ void FactorBuilder::build (vector< data_instance > &data_vector,
     }
 
 
-    // Add observation
-    Grante::ParameterEstimationMethod::labeled_instance_type lit(fg,
-            new Grante::FactorGraphObservation(observations));
-
-    _training_data.push_back(lit);
-
-
+    // Compute the forward map
+    //fg->ForwardMap();
 
     /*
     // Add inference method: here its a chain, hence use the tree inference
@@ -158,27 +158,74 @@ void FactorBuilder::build (vector< data_instance > &data_vector,
 
 
 
-void FactorBuilder::estimateParameters()
+void FactorBuilder::estimateParameters (vector< unsigned int > &partial_observations,
+            vector< unsigned int > &var_subset)
 {
+    // Add observation
+    FactorGraphPartialObservation *par_obs =
+        new FactorGraphPartialObservation (var_subset, partial_observations);
+
+    Grante::ParameterEstimationMethod::partially_labeled_instance_type plit(_fg, par_obs);
+
+    _training_data.push_back(plit);
+
+
+
     vector<Grante::InferenceMethod*> inf_method;
 
     // Add inference method: here its a chain, hence use the tree inference
     // method
-    inf_method.push_back(new Grante::TreeInference(_fg));
+    inf_method.push_back(new Grante::BeliefPropagation(_fg));
+
+    // EM Approach for Partially observed case
+    ExpectationMaximization em(&_model, new MaximumLikelihood(&_model));
+    em.SetupTrainingData(_training_data, inf_method, inf_method);
+
+    em.Train(1e-3, 10, 1e-3, 100);
 
     // Train the model using regularized maximum likelihood estimation
+    /*
     Grante::MaximumLikelihood mle(&_model);
     mle.SetupTrainingData(_training_data, inf_method);
+
+    unsigned int w_size = _model.FindFactorType("naive")->WeightDimension();
+
+    mle.AddPrior("naive", new Grante::NormalPrior(1.0, w_size));
     mle.Train(1.0e-4);
     std::cout << "Finished training." << std::endl;
+    */
 }
 
 
+void FactorBuilder::printTopicParams() {
+    string a("topic");
 
-double FactorBuilder::trainingAccuracy()
+    FactorType *ft_topic = _model.FindFactorType(a);
+    vector<double> weights = ft_topic->Weights();
+
+    for (unsigned int wi = 0; wi < weights.size(); wi++) {
+        cout << weights[wi] << ' ';
+    }
+    cout << endl;
+}
+
+void FactorBuilder::printWordsParams() {
+    string a("naive");
+
+    FactorType *ft_topic = _model.FindFactorType(a);
+    vector<double> weights = ft_topic->Weights();
+
+    for (unsigned int wi = 0; wi < weights.size(); wi++) {
+        cout << weights[wi] << ' ';
+    }
+    cout << endl;
+}
+
+
+double FactorBuilder::trainingAccuracy(vector< unsigned int > &real_label)
 {
     // Perform MAP prediction
-    Grante::TreeInference tinf(_fg); // fg
+    Grante::BeliefPropagation tinf(_fg); // fg
     _fg->ForwardMap();       // update energies
     std::vector<unsigned int> map_state;
     tinf.MinimizeEnergy(map_state);
@@ -186,17 +233,32 @@ double FactorBuilder::trainingAccuracy()
 
     unsigned int correctGuess = 0;
 
-    const FactorGraphObservation* obs = _training_data[0].second;
-    std::vector<unsigned int> observed_states = obs->State();
+    BOOST_ASSERT (real_label.size() <= map_state.size());
 
-    BOOST_ASSERT (observed_states.size() == map_state.size());
-
-    for (int i = 0; i < observed_states.size(); i++) {
-        if (observed_states[i] == map_state[i]) {
+    for (int i = 0; i < real_label.size(); i++) {
+        int offset = map_state.size() - real_label.size();
+        //cout << map_state[offset + i] << ' ';
+        if (real_label[i] == map_state[offset + i]) {
             correctGuess++;
         }
     }
+    //cout << endl;
 
-    return (double) correctGuess / (double) observed_states.size();
+    cout << "Prediction Results:" << endl;
+
+    cout << "Expected : ";
+    for (int i = 0; i < real_label.size(); i++) {
+        cout << real_label[i] << ' ';
+    }
+    cout << endl;
+
+    cout << "Predicted: ";
+    for (int i = 0; i < real_label.size(); i++) {
+        int offset = map_state.size() - real_label.size();
+        cout << map_state[i + offset] << ' ';
+    }
+    cout << endl;
+
+    return (double) correctGuess / (double) real_label.size();
 }
 

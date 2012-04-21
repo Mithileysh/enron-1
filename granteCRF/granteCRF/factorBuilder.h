@@ -23,18 +23,24 @@ public:
 
     void build (vector< data_instance > &data_vector,
             vector< data_idx_instance > &data_idx_vector,
-            vector< unsigned int > &observations,
-            vector< unsigned int > &card);
+            vector< unsigned int > &card,
+            vector< unsigned int > &partial_observations,
+            vector< unsigned int > &var_subset);
 
-    void estimateParameters();
+    void estimateParameters (vector< unsigned int > &partial_observations,
+            vector< unsigned int > &var_subset);
 
-    double trainingAccuracy();
+    double trainingAccuracy(vector< unsigned int > &real_label);
+
+    void printTopicParams();
+
+    void printWordsParams();
 
 private:
 
     FactorGraphModel _model;
 
-    vector<Grante::ParameterEstimationMethod::labeled_instance_type>
+    vector<Grante::ParameterEstimationMethod::partially_labeled_instance_type>
         _training_data;
 
     Grante::FactorGraph* _fg;
