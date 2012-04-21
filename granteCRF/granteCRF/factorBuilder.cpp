@@ -91,7 +91,7 @@ void FactorBuilder::build (vector< data_instance > &data_vector,
     Grante::FactorType* ft_topic2 = new Grante::LinearFactorType("topic2",
             card_topic, w_topic, 0, A);
             */
-    Grante::FactorType* ft_topic = new Grante::FactorType("topic1", card_topic, w_topic);
+    Grante::FactorType* ft_topic = new Grante::FactorType("topic", card_topic, w_topic);
     _model.AddFactorType(ft_topic);
 
     // Create a Factor Graph with Topic nodes
