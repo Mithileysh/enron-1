@@ -60,7 +60,7 @@ void FactorBuilder::build (vector< data_instance > &data_vector,
     // between different recipients.
 
     std::vector<unsigned int> card_topic(2, topic_card);   // cardinality of variables
-    std::vector<double> w_topic(2, 0.0);        // degree of freedom is 2
+    std::vector<double> w_topic(1, 0.0);        // degree of freedom is 2
 
     // name, card, data_size: As for FactorType,
     // A: vector of length prod_card (card[0]*...*card[card.size()-1]), that
@@ -79,9 +79,9 @@ void FactorBuilder::build (vector< data_instance > &data_vector,
     for (int ai = 0; ai < topic_card * topic_card; ai++) {
         // if it's diagonal
         if (ai / topic_card == ai % topic_card)
-            A.push_back(1);
-        else
             A.push_back(0);
+        else
+            A.push_back(-1);
     }
 
     Grante::FactorType* ft_topic = new Grante::LinearFactorType("topic", card_topic, w_topic, 0, A);

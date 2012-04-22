@@ -31,19 +31,26 @@ using namespace pyongjoo;
 
 int main (int argc, const char * argv[])
 {
-    if (argc < 4) {
-        cerr << "Usage: ./a.out [input file] [split percentage] [order]" << endl;
+    if (argc < 5) {
+        cerr << "Usage: ./a.out [test file] [train file] \
+            [observed index file] [hidden index file]" << endl;
         exit(1);
     }
 
-    SVMLightReader reader(argv[1]);
+    const char *test_file = argv[1];
+    const char *train_file = argv[2];
+    const char *observed_index_file = argv[3];
+    const char *hidden_index_file = argv[4];
+
+    SVMLightReader reader(test_file, train_file,
+            observed_index_file, hidden_index_file);
 
     cout << "Number of unique topics: " << reader.card()[0] << endl;
     cout << "Number of unique words: " << reader.card()[1] << endl;
 
     //reader.print();
 
-    unsigned int order = (unsigned int) atoi(argv[3]);
+    unsigned int order = 0;
     FactorBuilder builder(order);
 
     unsigned int partial_size = (unsigned int) reader.data_vector().size() * atof(argv[2]);
@@ -72,7 +79,7 @@ int main (int argc, const char * argv[])
     builder.printTopicParams();
 
     cout << "Words Params Learned" << endl;
-    builder.printWordsParams();
+    //builder.printWordsParams();
 
     // Test
 
