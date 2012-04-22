@@ -31,7 +31,7 @@ public:
             vector< unsigned int > &var_subset);
 
     double trainingAccuracy(vector< unsigned int > &real_label,
-        vector<unsigned int> &var_subset);
+        vector<unsigned int> &var_hiddenset);
 
     void printTopicParams();
 

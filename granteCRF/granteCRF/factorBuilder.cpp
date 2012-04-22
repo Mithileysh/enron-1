@@ -226,7 +226,7 @@ void FactorBuilder::printWordsParams() {
 
 
 double FactorBuilder::trainingAccuracy(vector< unsigned int > &real_label,
-        vector<unsigned int> &var_subset)
+        vector<unsigned int> &var_hiddenset)
 {
     // Perform MAP prediction
     Grante::BeliefPropagation tinf(_fg); // fg
@@ -241,7 +241,7 @@ double FactorBuilder::trainingAccuracy(vector< unsigned int > &real_label,
 
     for (int i = 0; i < real_label.size(); i++) {
         //cout << map_state[offset + i] << ' ';
-        if (real_label[i] == map_state[var_subset[i]]) {
+        if (real_label[i] == map_state[var_hiddenset[i]]) {
             correctGuess++;
         }
     }
