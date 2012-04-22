@@ -104,7 +104,8 @@ try:
 
     for row in rows:
         r = row['recipient']
-        words = re.findall(r'\w+', row['body'] + row['subject'])
+        #words = re.findall(r'\w+', row['body'] + row['subject'])
+        words = re.findall(r'\w+', row['body'])
 
         of.write(str(recipientIndexer.getIndex(r)))
 

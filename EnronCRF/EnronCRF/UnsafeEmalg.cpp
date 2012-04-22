@@ -55,7 +55,7 @@ Real UnsafeEmalg::iterateWithoutEstep(MaximizationStep &mstep) {
         
         nProcessed++;
         
-        if (nProcessed % 10000 == 0) {
+        if (nProcessed % 10 == 0) {
             cout << nProcessed << " number of samples processed" << endl;
         }
     }

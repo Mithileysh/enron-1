@@ -29,6 +29,7 @@ public:
 
     vector<unsigned int> &partial_observations();
     vector<unsigned int> &var_subset();
+    vector<unsigned int> &var_hiddenset();
 
     vector<unsigned int> &card();
 
@@ -43,6 +44,7 @@ private:
 
     vector<unsigned int> _partial_observations;
     vector<unsigned int> _var_subset;
+    vector<unsigned int> _var_hiddenset;
 
     vector<unsigned int> _card;
 

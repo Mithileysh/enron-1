@@ -41,7 +41,7 @@ r.rvalue in (
 ) and
 r.rtype = 'TO'
 order by m.date
-limit 10
+limit 100
 """
 
 class WordIndexer:
