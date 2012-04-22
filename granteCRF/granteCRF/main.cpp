@@ -76,7 +76,7 @@ int main (int argc, const char * argv[])
 
 
     cout << "trainer accuracy: "
-        << builder.trainingAccuracy(reader.observations(), reader.var_subset())
+        << builder.trainingAccuracy(reader.observations(), reader.var_hiddenset())
         << endl;
 
 

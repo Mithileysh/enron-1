@@ -192,6 +192,23 @@ SVMLightReader::SVMLightReader(const char *test_file, const char *train_file,
     infile.close();
 
 
+    // Make hidden var set
+
+    vector<unsigned int> flags;
+    flags.resize(data_vector.size(), 1);
+
+    for (int i = 0; i < _var_subset.size(); i++) {
+        int index = _var_subset[i];
+        flags[index] = 0;
+    }
+
+    for (int i = 0; i < flags.size(); i++) {
+        if (flags[i] == 1) {
+            _var_hiddenset.push_back((unsigned int) i);
+        }
+    }
+
+
     _card.push_back(largest_label[0] + 1);
     _card.push_back(largest_label[1] + 1);
 }
@@ -226,6 +243,11 @@ vector<unsigned int> &SVMLightReader::var_subset()
     return _var_subset;
 }
 
+
+vector<unsigned int> &SVMLightReader::var_hiddenset()
+{
+    return _var_hiddenset;
+}
 
 vector<unsigned int> &SVMLightReader::card()
 {
