@@ -31,15 +31,19 @@ using namespace pyongjoo;
 
 int main (int argc, const char * argv[])
 {
-    if (argc < 4) {
+    if (argc < 6) {
         cerr << "Usage: ./a.out [test file] [train file] \
-            [observed index file]" << endl;
+            [observed index file] [output file] [order]" << endl;
         exit(1);
     }
 
     const char *test_file = argv[1];
     const char *train_file = argv[2];
     const char *observed_index_file = argv[3];
+
+    const char *output_file = argv[4];
+
+    ofstream outfile(output_file, ios::out | ios::app);
 
     SVMLightReader reader(test_file, train_file, observed_index_file);
 
@@ -48,7 +52,7 @@ int main (int argc, const char * argv[])
 
     //reader.print();
 
-    unsigned int order = 0;
+    unsigned int order = (unsigned int) atoi(argv[5]);
     FactorBuilder builder(order);
 
 
@@ -74,11 +78,15 @@ int main (int argc, const char * argv[])
 
     vector< unsigned int > test_obs;
 
+    outfile << "Used test file: " << test_file << endl;
 
-    cout << "trainer accuracy: "
+    outfile << "Chain order: " << order << endl;
+
+    outfile << "Prediction accuracy: "
         << builder.trainingAccuracy(reader.observations(), reader.var_hiddenset())
-        << endl;
+        << endl << endl;
 
+    outfile.close();
 
     return 0;
 }

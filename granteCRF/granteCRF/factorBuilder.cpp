@@ -184,6 +184,14 @@ void FactorBuilder::estimateParameters (vector< unsigned int > &partial_observat
     ExpectationMaximization em(&_model, new MaximumLikelihood(&_model));
     em.SetupTrainingData(_training_data, inf_method, inf_method);
 
+    unsigned int w_size;
+
+    w_size = _model.FindFactorType("naive")->WeightDimension();
+    em.AddPrior("naive", new Grante::NormalPrior(10.0, w_size));
+
+    w_size = _model.FindFactorType("topic")->WeightDimension();
+    em.AddPrior("topic", new Grante::NormalPrior(10.0, w_size));
+
     em.Train(1e-3, 10, 1e-3, 100);
 
     // Train the model using regularized maximum likelihood estimation
