@@ -60,13 +60,8 @@ void FactorBuilder::build (vector< data_instance > &data_vector,
     // between different recipients.
 
     std::vector<unsigned int> card_topic(2, topic_card);   // cardinality of variables
-<<<<<<< HEAD
-    //std::vector<double> w_topic(2, 0.0);        // degree of freedom is 2
-    std::vector<double> w_topic(topic_card * topic_card, 0.0);        // degree of freedom is 2
-=======
     std::vector<double> w_topic(topic_card * topic_card - topic_card + 1, 0.0);
 
->>>>>>> 939790273a2b46e7aed8a0d524a867b2a4f63621
 
     // name, card, data_size: As for FactorType,
     // A: vector of length prod_card (card[0]*...*card[card.size()-1]), that
@@ -92,13 +87,7 @@ void FactorBuilder::build (vector< data_instance > &data_vector,
             A.push_back(param_binding++);
     }
 
-    /*
-    Grante::FactorType* ft_topic = new Grante::LinearFactorType("topic",
-            card_topic, w_topic, 0, A);
-    Grante::FactorType* ft_topic2 = new Grante::LinearFactorType("topic2",
-            card_topic, w_topic, 0, A);
-            */
-    Grante::FactorType* ft_topic = new Grante::FactorType("topic", card_topic, w_topic);
+    Grante::FactorType* ft_topic = new Grante::LinearFactorType("topic", card_topic, w_topic, 0, A);
     _model.AddFactorType(ft_topic);
 
     // Create a Factor Graph with Topic nodes
