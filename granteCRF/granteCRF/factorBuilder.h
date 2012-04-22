@@ -30,7 +30,8 @@ public:
     void estimateParameters (vector< unsigned int > &partial_observations,
             vector< unsigned int > &var_subset);
 
-    double trainingAccuracy(vector< unsigned int > &real_label);
+    double trainingAccuracy(vector< unsigned int > &real_label,
+        vector<unsigned int> &var_subset);
 
     void printTopicParams();
 

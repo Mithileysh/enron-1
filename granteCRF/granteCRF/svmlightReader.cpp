@@ -17,7 +17,7 @@ using namespace boost;
 
 
 SVMLightReader::SVMLightReader(const char *test_file, const char *train_file,
-            const char *observed_index_file, const char *hidden_index_file);
+            const char *observed_index_file)
 {
     // Read in the training data
 
@@ -92,10 +92,11 @@ SVMLightReader::SVMLightReader(const char *test_file, const char *train_file,
         train_offset += 1;
     }
 
+    infile.close();
 
-    ifstream infile;
+
     infile.open (train_file);
-    string line;
+    line = "";
 
     while (!infile.eof())
     {
@@ -150,6 +151,8 @@ SVMLightReader::SVMLightReader(const char *test_file, const char *train_file,
         data_vector.push_back(data_element);
     }
 
+    infile.close();
+
 
     _data_vector = data_vector;
     _data_idx_vector = data_idx_vector;
@@ -159,9 +162,8 @@ SVMLightReader::SVMLightReader(const char *test_file, const char *train_file,
 
     // Make partially observed data
 
-    ifstream infile;
     infile.open (observed_index_file);
-    string line;
+    line = "";
 
     for (int pi = 0; pi < train_offset; pi++) {
         _var_subset.push_back((unsigned int) pi);
@@ -182,10 +184,12 @@ SVMLightReader::SVMLightReader(const char *test_file, const char *train_file,
 
     vector<unsigned int>::iterator itr;
     for (itr = _var_subset.begin(); itr < _var_subset.end();
-            _var_subset++) {
+            itr++) {
         unsigned int index = *itr;
         _partial_observations.push_back(_observations[index]);
     }
+
+    infile.close();
 
 
     _card.push_back(largest_label[0] + 1);

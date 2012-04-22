@@ -21,7 +21,7 @@ public:
      *
      */
     SVMLightReader(const char *test_file, const char *train_file,
-            const char *observed_index_file, const char *hidden_index_file);
+            const char *observed_index_file);
 
     vector< data_instance > &data_vector();
     vector< data_idx_instance > &data_idx_vector();
