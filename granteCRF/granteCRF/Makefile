@@ -13,4 +13,6 @@ naivetest:
 sample:
 	$(CC) $(ARGS) sample.cpp
 
+run:
+	./a.out /Users/yongjoo/workspace/enron/dataset/train_out /Users/yongjoo/workspace/enron/dataset/test_out /Users/yongjoo/workspace/enron/dataset/test_observed_label
 

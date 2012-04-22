@@ -60,8 +60,13 @@ void FactorBuilder::build (vector< data_instance > &data_vector,
     // between different recipients.
 
     std::vector<unsigned int> card_topic(2, topic_card);   // cardinality of variables
+<<<<<<< HEAD
     //std::vector<double> w_topic(2, 0.0);        // degree of freedom is 2
     std::vector<double> w_topic(topic_card * topic_card, 0.0);        // degree of freedom is 2
+=======
+    std::vector<double> w_topic(topic_card * topic_card - topic_card + 1, 0.0);
+
+>>>>>>> 939790273a2b46e7aed8a0d524a867b2a4f63621
 
     // name, card, data_size: As for FactorType,
     // A: vector of length prod_card (card[0]*...*card[card.size()-1]), that
@@ -77,12 +82,14 @@ void FactorBuilder::build (vector< data_instance > &data_vector,
     // create a parameter typing matrix
     vector<int> A;
     
+    int param_binding = 1;
+
     for (int ai = 0; ai < topic_card * topic_card; ai++) {
         // if it's diagonal
         if (ai / topic_card == ai % topic_card)
-            A.push_back(1);
-        else
             A.push_back(0);
+        else
+            A.push_back(param_binding++);
     }
 
     /*
@@ -229,7 +236,8 @@ void FactorBuilder::printWordsParams() {
 }
 
 
-double FactorBuilder::trainingAccuracy(vector< unsigned int > &real_label)
+double FactorBuilder::trainingAccuracy(vector< unsigned int > &real_label,
+        vector<unsigned int> &var_subset)
 {
     // Perform MAP prediction
     Grante::BeliefPropagation tinf(_fg); // fg
@@ -243,9 +251,8 @@ double FactorBuilder::trainingAccuracy(vector< unsigned int > &real_label)
     BOOST_ASSERT (real_label.size() <= map_state.size());
 
     for (int i = 0; i < real_label.size(); i++) {
-        int offset = map_state.size() - real_label.size();
         //cout << map_state[offset + i] << ' ';
-        if (real_label[i] == map_state[offset + i]) {
+        if (real_label[i] == map_state[var_subset[i]]) {
             correctGuess++;
         }
     }
@@ -253,16 +260,8 @@ double FactorBuilder::trainingAccuracy(vector< unsigned int > &real_label)
 
     cout << "Prediction Results:" << endl;
 
-    cout << "Expected : ";
-    for (int i = 0; i < real_label.size(); i++) {
-        cout << real_label[i] << ' ';
-    }
-    cout << endl;
-
-    cout << "Predicted: ";
-    for (int i = 0; i < real_label.size(); i++) {
-        int offset = map_state.size() - real_label.size();
-        cout << map_state[i + offset] << ' ';
+    for (int i = 0; i < map_state.size(); i++) {
+        cout << map_state[i] << ' ';
     }
     cout << endl;
 

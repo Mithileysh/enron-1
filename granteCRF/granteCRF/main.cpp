@@ -32,59 +32,52 @@ using namespace pyongjoo;
 int main (int argc, const char * argv[])
 {
     if (argc < 4) {
-        cerr << "Usage: ./a.out [input file] [split percentage] [order]" << endl;
+        cerr << "Usage: ./a.out [test file] [train file] \
+            [observed index file]" << endl;
         exit(1);
     }
 
-    SVMLightReader reader(argv[1]);
+    const char *test_file = argv[1];
+    const char *train_file = argv[2];
+    const char *observed_index_file = argv[3];
+
+    SVMLightReader reader(test_file, train_file, observed_index_file);
 
     cout << "Number of unique topics: " << reader.card()[0] << endl;
     cout << "Number of unique words: " << reader.card()[1] << endl;
 
     //reader.print();
 
-    unsigned int order = (unsigned int) atoi(argv[3]);
+    unsigned int order = 1;
     FactorBuilder builder(order);
 
-    unsigned int partial_size = (unsigned int) reader.data_vector().size() * atof(argv[2]);
 
-    vector< unsigned int > var_set;
-    vector< unsigned int > partial_obs;
-
-    BOOST_ASSERT(partial_size < reader.data_vector().size());
-
-    for (unsigned int di = 0; di < partial_size; di++) {
-        var_set.push_back(di);
-        partial_obs.push_back(reader.observations()[di]);
-    }
 
     builder.build(reader.data_vector(),
             reader.data_idx_vector(),
             reader.card(),
-            partial_obs,
-            var_set);
+            reader.partial_observations(),
+            reader.var_subset());
 
     // Learning
 
-    builder.estimateParameters(partial_obs, var_set);
+    builder.estimateParameters(reader.partial_observations(),
+            reader.var_subset());
 
     cout << "Topic Params Learned" << endl;
     builder.printTopicParams();
 
     cout << "Words Params Learned" << endl;
-    builder.printWordsParams();
+    //builder.printWordsParams();
 
     // Test
 
     vector< unsigned int > test_obs;
 
 
-    for (unsigned int ti = 0; ti < reader.data_vector().size() - partial_size; ti++) {
-        unsigned int offset = partial_size;
-        test_obs.push_back(reader.observations()[ti + offset]);
-    }
-
-    cout << "trainer accuracy: " << builder.trainingAccuracy(test_obs) << endl;
+    cout << "trainer accuracy: "
+        << builder.trainingAccuracy(reader.observations(), reader.var_subset())
+        << endl;
 
 
     return 0;
