@@ -63,146 +63,153 @@ def isStopWord(word):
 
 with con:
 
-    cur = con.cursor(mdb.cursors.DictCursor)
+    test_table_prefix = "data_chunk"
+    train_table_prefix = "data_chunk"
 
-    sender = "richard.shapiro@enron.com"
+    for table_suffix in range(1, 10):
+        test_table = test_table_prefix + str(table_suffix)
+        train_table = train_table_prefix + str(table_suffix + 1)
 
-    query = """
-    select sender, subject, body, rvalue
-    from
-    (select m.mid, m.sender, m.date, m.subject,
-    m.body, r.rvalue, r.rtype
+        cur = con.cursor(mdb.cursors.DictCursor)
 
-    from message m
-    inner join recipientinfo r
-    on m.mid = r.mid
-    inner join data_chunk1 d
-    on m.mid = d.mid
+        sender = "richard.shapiro@enron.com"
 
-    where m.sender = '%s' or
+        query = """
+        select sender, subject, body, rvalue
+        from
+        (select m.mid, m.sender, m.date, m.subject,
+        m.body, r.rvalue, r.rtype
 
-    rvalue = '%s'
+        from message m
+        inner join recipientinfo r
+        on m.mid = r.mid
+        inner join %s d
+        on m.mid = d.mid
 
-    order by m.date) as T;
-    """ % (sender, sender)
+        where m.sender = '%s' or
 
-    cur.execute(query)
+        rvalue = '%s'
 
-    # store instances in svm-light format
-    train_out = open('train_out', 'w')
+        order by m.date) as T;
+        """ % (test_table, sender, sender)
 
-    while True:
-        row = cur.fetchone()
+        cur.execute(query)
 
-        if not row:
-            break
+        # store instances in svm-light format
+        train_out = open('shapiro' + str(table_suffix) + '.train', 'w')
 
-        r = row['rvalue'] if row['sender'] == sender else row['sender']
-        words = re.findall(r'\w+', row['body'] + row['subject'])
+        while True:
+            row = cur.fetchone()
 
-        train_out.write(str(recipientIndexer.getIndex(r)))
+            if not row:
+                break
 
-        # collect the word count for this recipient
+            r = row['rvalue'] if row['sender'] == sender else row['sender']
+            words = re.findall(r'\w+', row['body'] + row['subject'])
 
-        wordDic = {}
+            train_out.write(str(recipientIndexer.getIndex(r)))
 
-        for word in words:
-            if isStopWord(word):
-                continue
-            else:
-                wi = wordIndexer.getIndex(word)
-                if wi in wordDic:
-                    wordDic[wi] += 1
+            # collect the word count for this recipient
+
+            wordDic = {}
+
+            for word in words:
+                if isStopWord(word):
+                    continue
                 else:
-                    wordDic[wi] = 1
+                    wi = wordIndexer.getIndex(word)
+                    if wi in wordDic:
+                        wordDic[wi] += 1
+                    else:
+                        wordDic[wi] = 1
 
 
-        # Now print the collected word into svm light format
+            # Now print the collected word into svm light format
 
-        featureLine = ""
+            featureLine = ""
 
-        for w, k in wordDic.iteritems():
-            featureLine += ' ' + str(w) + ':' + str(k)
-
-
-        train_out.write(featureLine + '\n')
+            for w, k in wordDic.iteritems():
+                featureLine += ' ' + str(w) + ':' + str(k)
 
 
-    # Now write a file to
-
-    sender = "richard.shapiro@enron.com"
-
-    query = """
-    select sender, subject, body, rvalue
-    from
-    (select m.mid, m.sender, m.date, m.subject,
-    m.body, r.rvalue, r.rtype
-
-    from message m
-    inner join recipientinfo r
-    on m.mid = r.mid
-    inner join data_chunk2 d
-    on m.mid = d.mid
-
-    where m.sender = '%s' or
-
-    rvalue = '%s'
-
-    order by m.date) as T;
-    """ % (sender, sender)
-
-    cur.execute(query)
-
-    test_out = open('test_out', 'w')
-
-    # test set is partially observed
-    observed_out = open('test_observed_label', 'w')
-    hidden_out = open('test_hidden_label', 'w')
-
-    rownum = 0
-
-    while True:
-        row = cur.fetchone()
-
-        if not row:
-            break
-
-        r = row['rvalue'] if row['sender'] == sender else row['sender']
-        words = re.findall(r'\w+', row['body'] + row['subject'])
-
-        if not recipientIndexer.isIn(r):
-            continue
-
-        test_out.write(str(recipientIndexer.getIndex(r)))
-
-        if row['sender'] == sender:
-            hidden_out.write(str(rownum) + '\n')
-        else:
-            observed_out.write(str(rownum) + '\n')
+            train_out.write(featureLine + '\n')
 
 
-        # collect the word count for this recipient
+        # Now write a file to
 
-        wordDic = {}
+        query = """
+        select sender, subject, body, rvalue
+        from
+        (select m.mid, m.sender, m.date, m.subject,
+        m.body, r.rvalue, r.rtype
 
-        for word in words:
-            if isStopWord(word):
+        from message m
+        inner join recipientinfo r
+        on m.mid = r.mid
+        inner join %s d
+        on m.mid = d.mid
+
+        where m.sender = '%s' or
+
+        rvalue = '%s'
+
+        order by m.date) as T;
+        """ % (train_table, sender, sender)
+
+        cur.execute(query)
+
+        test_out = open('shapiro' + str(table_suffix) + '.test', 'w')
+
+        # test set is partially observed
+        observed_out = open('shapiro' + str(table_suffix)
+                + '.test_observed_label', 'w')
+        hidden_out = open('shapiro' + str(table_suffix)
+                + '.test_hidden_label', 'w')
+
+        rownum = 0
+
+        while True:
+            row = cur.fetchone()
+
+            if not row:
+                break
+
+            r = row['rvalue'] if row['sender'] == sender else row['sender']
+            words = re.findall(r'\w+', row['body'] + row['subject'])
+
+            if not recipientIndexer.isIn(r):
                 continue
+
+            test_out.write(str(recipientIndexer.getIndex(r)))
+
+            if row['sender'] == sender:
+                hidden_out.write(str(rownum) + '\n')
             else:
-                wi = wordIndexer.getIndex(word)
-                if wi in wordDic:
-                    wordDic[wi] += 1
+                observed_out.write(str(rownum) + '\n')
+
+
+            # collect the word count for this recipient
+
+            wordDic = {}
+
+            for word in words:
+                if isStopWord(word):
+                    continue
                 else:
-                    wordDic[wi] = 1
+                    wi = wordIndexer.getIndex(word)
+                    if wi in wordDic:
+                        wordDic[wi] += 1
+                    else:
+                        wordDic[wi] = 1
 
-        # Now print the collected word into svm light format
+            # Now print the collected word into svm light format
 
-        featureLine = ""
+            featureLine = ""
 
-        for w, k in wordDic.iteritems():
-            featureLine += ' ' + str(w) + ':' + str(k)
+            for w, k in wordDic.iteritems():
+                featureLine += ' ' + str(w) + ':' + str(k)
 
 
-        test_out.write(featureLine + '\n')
+            test_out.write(featureLine + '\n')
 
-        rownum += 1
+            rownum += 1
