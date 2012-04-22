@@ -48,7 +48,7 @@ int main (int argc, const char * argv[])
 
     //reader.print();
 
-    unsigned int order = 1;
+    unsigned int order = 0;
     FactorBuilder builder(order);
 
 

@@ -239,9 +239,9 @@ double FactorBuilder::trainingAccuracy(vector< unsigned int > &real_label,
 
     BOOST_ASSERT (real_label.size() <= map_state.size());
 
-    for (int i = 0; i < real_label.size(); i++) {
-        //cout << map_state[offset + i] << ' ';
-        if (real_label[i] == map_state[var_hiddenset[i]]) {
+    for (int i = 0; i < var_hiddenset.size(); i++) {
+        unsigned int index = var_hiddenset[i];
+        if (real_label[index] == map_state[index]) {
             correctGuess++;
         }
     }
@@ -254,6 +254,6 @@ double FactorBuilder::trainingAccuracy(vector< unsigned int > &real_label,
     }
     cout << endl;
 
-    return (double) correctGuess / (double) real_label.size();
+    return (double) correctGuess / (double) var_hiddenset.size();
 }
 
