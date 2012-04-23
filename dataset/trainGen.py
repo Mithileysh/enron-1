@@ -22,7 +22,6 @@ class WordIndexer:
     def size(self):
         return len(self.wordDic)
 
-wordIndexer = WordIndexer()
 
 class RecipientIndexer:
     def __init__(self):
@@ -47,8 +46,6 @@ class RecipientIndexer:
         else:
             return False
 
-recipientIndexer = RecipientIndexer()
-
 
 # stop list process
 stoplist = []
@@ -63,19 +60,23 @@ def isStopWord(word):
 
 with con:
 
-    test_table_prefix = "data_chunk"
     train_table_prefix = "data_chunk"
+    test_table_prefix = "data_chunk"
 
     for table_suffix in range(1, 10):
-        test_table = test_table_prefix + str(table_suffix)
-        train_table = train_table_prefix + str(table_suffix + 1)
+        wordIndexer = WordIndexer()
+        recipientIndexer = RecipientIndexer()
+
+        train_table = train_table_prefix + str(table_suffix)
+        test_table = test_table_prefix + str(table_suffix + 1)
 
         cur = con.cursor(mdb.cursors.DictCursor)
 
         sender = "richard.shapiro@enron.com"
+        fileprefix = "shapiro"
 
-        query = """
-        select sender, subject, body, rvalue
+        param_query = """
+        select mid, sender, rvalue, rtype, date, subject, body
         from
         (select m.mid, m.sender, m.date, m.subject,
         m.body, r.rvalue, r.rtype
@@ -83,20 +84,38 @@ with con:
         from message m
         inner join recipientinfo r
         on m.mid = r.mid
-        inner join %s d
+        inner join %(table)s d
         on m.mid = d.mid
 
-        where m.sender = '%s' or
+        where (m.sender = '%(sender)s' and
+        m.mid in (
+            select mid
+            from (
+                SELECT m.mid as mid, r.rvalue as recipient, count(*) as count
+                FROM message m
+                inner join recipientinfo r
+                on m.mid = r.mid
 
-        rvalue = '%s'
+                where m.mid in
+                    (select * from %(table)s) and
+                r.rtype = 'TO'
+
+                GROUP by mid) as T
+            WHERE T.count = 1) and
+        r.rtype = 'TO'
+        ) or
+
+        r.rvalue = '%(sender)s'
 
         order by m.date) as T;
-        """ % (test_table, sender, sender)
+        """
+
+        query = param_query % dict(sender=sender, table=train_table)
 
         cur.execute(query)
 
         # store instances in svm-light format
-        train_out = open('shapiro' + str(table_suffix) + '.train', 'w')
+        train_out = open(fileprefix + str(table_suffix) + '.train', 'w')
 
         while True:
             row = cur.fetchone()
@@ -135,35 +154,18 @@ with con:
             train_out.write(featureLine + '\n')
 
 
-        # Now write a file to
+        # Now write a file to ( I don't remember what comment meant)
 
-        query = """
-        select sender, subject, body, rvalue
-        from
-        (select m.mid, m.sender, m.date, m.subject,
-        m.body, r.rvalue, r.rtype
-
-        from message m
-        inner join recipientinfo r
-        on m.mid = r.mid
-        inner join %s d
-        on m.mid = d.mid
-
-        where m.sender = '%s' or
-
-        rvalue = '%s'
-
-        order by m.date) as T;
-        """ % (train_table, sender, sender)
+        query = param_query % dict(sender=sender, table=test_table)
 
         cur.execute(query)
 
-        test_out = open('shapiro' + str(table_suffix) + '.test', 'w')
+        test_out = open(fileprefix + str(table_suffix) + '.test', 'w')
 
         # test set is partially observed
-        observed_out = open('shapiro' + str(table_suffix)
+        observed_out = open(fileprefix + str(table_suffix)
                 + '.test_observed_label', 'w')
-        hidden_out = open('shapiro' + str(table_suffix)
+        hidden_out = open(fileprefix + str(table_suffix)
                 + '.test_hidden_label', 'w')
 
         rownum = 0
