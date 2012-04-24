@@ -138,7 +138,7 @@ with con:
     wordIndexer = WordIndexer()
     recipientIndexer = RecipientIndexer()
 
-    train_table = 'data_train'
+    train_table = 'dataset_mid'
 
     cur = con.cursor(mdb.cursors.DictCursor)
 
