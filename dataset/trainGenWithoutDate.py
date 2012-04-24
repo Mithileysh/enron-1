@@ -143,7 +143,7 @@ with con:
     cur = con.cursor(mdb.cursors.DictCursor)
 
     sender = "richard.shapiro@enron.com"
-    fileprefix = "yongjoo"
+    fileprefix = "yong"
 
     param_query = """
     select m.mid as mid, m.sender as sender,
@@ -191,14 +191,14 @@ with con:
                 else:
                     wordDic[wi] = 1
 
-        timewords = extractTimeIndex(con, rows, idx)
+        #timewords = extractTimeIndex(con, rows, idx)
 
-        for word in timewords:
-            wi = wordIndexer.getIndex(word)
-            if wi in wordDic:
-                wordDic[wi] += 1
-            else:
-                wordDic[wi] = 1
+        #for word in timewords:
+        #    wi = wordIndexer.getIndex(word)
+        #    if wi in wordDic:
+        #        wordDic[wi] += 1
+        #    else:
+        #        wordDic[wi] = 1
 
 
         # Now print the collected word into svm light format
