@@ -1,6 +1,6 @@
 include Makefile.conf
 
-FLAGS=-lboost_serialization -lgrante -O2
+FLAGS=-lboost_serialization -lgrante -O0 -g
 OUT=-o a.out
 ARGS=$(INCLUDE) $(LIBRARY) $(FLAGS) $(OUT)
 
@@ -14,5 +14,5 @@ sample:
 	$(CC) $(ARGS) sample.cpp
 
 run:
-	./a.out /home/yongjoo/workspace/enron/dataset/train_out /home/yongjoo/workspace/enron/dataset/test_out /home/yongjoo/workspace/enron/dataset/test_observed_label
+	./a.out /Users/yongjoo/workspace/enron/dataset/train_out /Users/yongjoo/workspace/enron/dataset/test_out /Users/yongjoo/workspace/enron/dataset/test_observed_label
 
