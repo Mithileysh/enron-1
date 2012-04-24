@@ -143,7 +143,7 @@ with con:
     cur = con.cursor(mdb.cursors.DictCursor)
 
     sender = "richard.shapiro@enron.com"
-    fileprefix = "yongjoo"
+    fileprefix = "shapiro_date"
 
     param_query = """
     select m.mid as mid, m.sender as sender,
